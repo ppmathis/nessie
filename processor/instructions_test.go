@@ -88,6 +88,23 @@ func testImplicit(opcode uint8, registers Registers) {
 	cpu.Execute()
 }
 
+func testRelative(opcode uint8, offset int8, flags Flags) {
+	setup()
+
+	var value uint8
+	if value < 0 {
+		value = 0xFF - uint8(-offset)
+	} else {
+		value = uint8(offset)
+	}
+
+	cpu.Flags = flags
+	cpu.Registers.PC = 0x0100
+	cpu.Memory.Poke(0x0100, opcode)
+	cpu.Memory.Poke(0x0101, value)
+	cpu.Execute()
+}
+
 func testImmediate(opcode uint8, argument uint8, registers Registers) {
 	setup()
 
@@ -212,7 +229,7 @@ func TestINY(t *testing.T) {
 	testINY(0x7F, 0x80, false, true)
 }
 
-func testDEC(t *testing.T) {
+func TestDEC(t *testing.T) {
 	testDEC := func(value uint8, result uint8, isZero bool, isNegative bool) {
 		fmt.Printf("testDEC[%d] =? %d\n", value, result)
 		testAbsolute(0xCE, value, Registers{})
@@ -285,7 +302,7 @@ func TestCMP(t *testing.T) {
 
 func TestCPX(t *testing.T) {
 	testCPX := func(a uint8, b uint8, isCarry bool, isZero bool, isNegative bool) {
-		fmt.Printf("testCPX[%d, %d] =? C:%v Z:%v N:%v\n", a, b, isCarry, isZero, isNegative)
+		fmt.Printf("testCPX[%d, %d] =? C:%t Z:%t N:%t\n", a, b, isCarry, isZero, isNegative)
 		testImmediate(0xE0, b, Registers{X: a})
 
 		flags := testFlags{}
@@ -304,7 +321,7 @@ func TestCPX(t *testing.T) {
 
 func TestCPY(t *testing.T) {
 	testCPY := func(a uint8, b uint8, isCarry bool, isZero bool, isNegative bool) {
-		fmt.Printf("testCPY[%d, %d] =? C:%v Z:%v N:%v\n", a, b, isCarry, isZero, isNegative)
+		fmt.Printf("testCPY[%d, %d] =? C:%t Z:%t N:%t\n", a, b, isCarry, isZero, isNegative)
 		testImmediate(0xC0, b, Registers{Y: a})
 
 		flags := testFlags{}
@@ -323,7 +340,7 @@ func TestCPY(t *testing.T) {
 
 func TestTAX(t *testing.T) {
 	testTAX := func(value uint8, isZero bool, isNegative bool) {
-		fmt.Printf("testTAX[%d] =? Z:%v N:%v\n", value, isZero, isNegative)
+		fmt.Printf("testTAX[%d] =? Z:%t N:%t\n", value, isZero, isNegative)
 		testImplicit(0xAA, Registers{A: value})
 
 		flags := testFlags{}
@@ -337,7 +354,6 @@ func TestTAX(t *testing.T) {
 	testTAX(0x00, true, false)
 	testTAX(0x80, false, true)
 }
-
 
 func TestTXA(t *testing.T) {
 	testTXA := func(value uint8, isZero bool, isNegative bool) {
@@ -373,7 +389,6 @@ func TestTAY(t *testing.T) {
 	testTAY(0x80, false, true)
 }
 
-
 func TestTXY(t *testing.T) {
 	testTXY := func(value uint8, isZero bool, isNegative bool) {
 		fmt.Printf("testTXY[%d] =? Z:%v N:%v\n", value, isZero, isNegative)
@@ -391,3 +406,146 @@ func TestTXY(t *testing.T) {
 	testTXY(0x80, false, true)
 }
 
+func TestBCS(t *testing.T) {
+	testBCS := func(offset int8, carryFlag bool, isSuccessful bool, cycles Cycles) {
+		fmt.Printf("testBCS[C:%t]\n", carryFlag)
+		testRelative(0xB0, offset, Flags{Carry: carryFlag})
+
+		if isSuccessful {
+			address := uint16(0x0102 + int16(offset))
+			assertCPU(t, cycles, testFlags{}, testRegister{register: RegisterPC, expected: address})
+		} else {
+			assertCPU(t, cycles, testFlags{}, testRegister{register: RegisterPC, expected: 0x102})
+		}
+	}
+
+	testBCS(+10, false, false, 2)
+	testBCS(+10, true, true, 3)
+	testBCS(-10, true, true, 4)
+}
+
+func TestBCC(t *testing.T) {
+	testBCC := func(offset int8, carryFlag bool, isSuccessful bool, cycles Cycles) {
+		fmt.Printf("testBCC[C:%t]\n", carryFlag)
+		testRelative(0x90, offset, Flags{Carry: carryFlag})
+
+		if isSuccessful {
+			address := uint16(0x0102 + int16(offset))
+			assertCPU(t, cycles, testFlags{}, testRegister{register: RegisterPC, expected: address})
+		} else {
+			assertCPU(t, cycles, testFlags{}, testRegister{register: RegisterPC, expected: 0x102})
+		}
+	}
+
+	testBCC(+10, true, false, 2)
+	testBCC(+10, false, true, 3)
+	testBCC(-10, false, true, 4)
+}
+
+func TestBEQ(t *testing.T) {
+	testBEQ := func(offset int8, zeroFlag bool, isSuccessful bool, cycles Cycles) {
+		fmt.Printf("testBEQ[Z:%t]\n", zeroFlag)
+		testRelative(0xF0, offset, Flags{Zero: zeroFlag})
+
+		if isSuccessful {
+			address := uint16(0x0102 + int16(offset))
+			assertCPU(t, cycles, testFlags{}, testRegister{register: RegisterPC, expected: address})
+		} else {
+			assertCPU(t, cycles, testFlags{}, testRegister{register: RegisterPC, expected: 0x102})
+		}
+	}
+
+	testBEQ(+10, false, false, 2)
+	testBEQ(+10, true, true, 3)
+	testBEQ(-10, true, true, 4)
+}
+
+func TestBNE(t *testing.T) {
+	testBNE := func(offset int8, zeroFlag bool, isSuccessful bool, cycles Cycles) {
+		fmt.Printf("testBNE[Z:%t]\n", zeroFlag)
+		testRelative(0xD0, offset, Flags{Zero: zeroFlag})
+
+		if isSuccessful {
+			address := uint16(0x0102 + int16(offset))
+			assertCPU(t, cycles, testFlags{}, testRegister{register: RegisterPC, expected: address})
+		} else {
+			assertCPU(t, cycles, testFlags{}, testRegister{register: RegisterPC, expected: 0x102})
+		}
+	}
+
+	testBNE(+10, true, false, 2)
+	testBNE(+10, false, true, 3)
+	testBNE(-10, false, true, 4)
+}
+
+func TestBMI(t *testing.T) {
+	testBMI := func(offset int8, negativeFlag bool, isSuccessful bool, cycles Cycles) {
+		fmt.Printf("testBMI[N:%t]\n", negativeFlag)
+		testRelative(0x30, offset, Flags{Negative: negativeFlag})
+
+		if isSuccessful {
+			address := uint16(0x0102 + int16(offset))
+			assertCPU(t, cycles, testFlags{}, testRegister{register: RegisterPC, expected: address})
+		} else {
+			assertCPU(t, cycles, testFlags{}, testRegister{register: RegisterPC, expected: 0x102})
+		}
+	}
+
+	testBMI(+10, false, false, 2)
+	testBMI(+10, true, true, 3)
+	testBMI(-10, true, true, 4)
+}
+
+func TestBPL(t *testing.T) {
+	testBPL := func(offset int8, negativeFlag bool, isSuccessful bool, cycles Cycles) {
+		fmt.Printf("testBPL[N:%t]\n", negativeFlag)
+		testRelative(0x10, offset, Flags{Negative: negativeFlag})
+
+		if isSuccessful {
+			address := uint16(0x0102 + int16(offset))
+			assertCPU(t, cycles, testFlags{}, testRegister{register: RegisterPC, expected: address})
+		} else {
+			assertCPU(t, cycles, testFlags{}, testRegister{register: RegisterPC, expected: 0x102})
+		}
+	}
+
+	testBPL(+10, true, false, 2)
+	testBPL(+10, false, true, 3)
+	testBPL(-10, false, true, 4)
+}
+
+func TestBVS(t *testing.T) {
+	testBVS := func(offset int8, overflowFlag bool, isSuccessful bool, cycles Cycles) {
+		fmt.Printf("testBVS[O:%t]\n", overflowFlag)
+		testRelative(0x70, offset, Flags{Overflow: overflowFlag})
+
+		if isSuccessful {
+			address := uint16(0x0102 + int16(offset))
+			assertCPU(t, cycles, testFlags{}, testRegister{register: RegisterPC, expected: address})
+		} else {
+			assertCPU(t, cycles, testFlags{}, testRegister{register: RegisterPC, expected: 0x102})
+		}
+	}
+
+	testBVS(+10, false, false, 2)
+	testBVS(+10, true, true, 3)
+	testBVS(-10, true, true, 4)
+}
+
+func TestBVC(t *testing.T) {
+	testBVC := func(offset int8, overflowFlag bool, isSuccessful bool, cycles Cycles) {
+		fmt.Printf("testBVC[O:%t]\n", overflowFlag)
+		testRelative(0x50, offset, Flags{Overflow: overflowFlag})
+
+		if isSuccessful {
+			address := uint16(0x0102 + int16(offset))
+			assertCPU(t, cycles, testFlags{}, testRegister{register: RegisterPC, expected: address})
+		} else {
+			assertCPU(t, cycles, testFlags{}, testRegister{register: RegisterPC, expected: 0x102})
+		}
+	}
+
+	testBVC(+10, true, false, 2)
+	testBVC(+10, false, true, 3)
+	testBVC(-10, false, true, 4)
+}

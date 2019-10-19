@@ -136,13 +136,53 @@ func (c *CPU) registerInstructions() {
 	)
 
 	// TSX - Transfer Stack Pointer to X
-	c.instructions.registerVariant("TSX", c.opTSX,
+	c.instructions.registerVariants("TSX", c.opTSX,
 		InstructionVariant{0xBA, Implicit, 2},
 	)
 
 	// TXS - Transfer X to Stack Pointer
-	c.instructions.registerVariant("TXS", c.opTXS,
+	c.instructions.registerVariants("TXS", c.opTXS,
 		InstructionVariant{0x9A, Implicit, 2},
+	)
+
+	// BCS - Branch if Carry Set
+	c.instructions.registerVariants("BCS", c.opBCS,
+		InstructionVariant{0xB0, Relative, 2},
+	)
+
+	// BCC - Branch if Carry Clear
+	c.instructions.registerVariants("BCC", c.opBCC,
+		InstructionVariant{0x90, Relative, 2},
+	)
+
+	// BEQ - Branch if Equal
+	c.instructions.registerVariants("BEQ", c.opBEQ,
+		InstructionVariant{0xF0, Relative, 2},
+	)
+
+	// BNE - Branch if Not Equal
+	c.instructions.registerVariants("BNE", c.opBNE,
+		InstructionVariant{0xD0, Relative, 2},
+	)
+
+	// BMI - Branch if Minus
+	c.instructions.registerVariants("BMI", c.opBMI,
+		InstructionVariant{0x30, Relative, 2},
+	)
+
+	// BPL - Branch if Positive
+	c.instructions.registerVariants("BPL", c.opBPL,
+		InstructionVariant{0x10, Relative, 2},
+	)
+
+	// BVS - Branch if Overflow Set
+	c.instructions.registerVariants("BVS", c.opBVS,
+		InstructionVariant{0x70, Relative, 2},
+	)
+
+	// BVC - Branch if Overflow Clear
+	c.instructions.registerVariants("BVC", c.opBVC,
+		InstructionVariant{0x50, Relative, 2},
 	)
 }
 

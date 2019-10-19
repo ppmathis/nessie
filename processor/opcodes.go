@@ -9,6 +9,21 @@ func (c *CPU) setFlagsZN(result uint8) uint8 {
 	return result
 }
 
+func (c *CPU) branch(condition bool, target uint16) (extraCycles Cycles) {
+	if !condition {
+		return
+	}
+
+	if !SamePage(c.Registers.PC, target) {
+		extraCycles += 2
+	} else {
+		extraCycles += 1
+	}
+
+	c.Registers.PC = target
+	return
+}
+
 func (c *CPU) opAND(mode AddressingMode) (extraCycles Cycles) {
 	address, extraCycles := c.lookupAddress(mode)
 	value := c.Memory.Peek(address)
@@ -138,4 +153,44 @@ func (c *CPU) opTSX(mode AddressingMode) (extraCycles Cycles) {
 func (c *CPU) opTXS(mode AddressingMode) (extraCycles Cycles) {
 	c.Registers.S = c.Registers.X
 	return
+}
+
+func (c *CPU) opBCS(mode AddressingMode) (extraCycles Cycles) {
+	target, _ := c.lookupAddress(mode)
+	return c.branch(c.Flags.Carry, target)
+}
+
+func (c *CPU) opBCC(mode AddressingMode) (extraCycles Cycles) {
+	target, _ := c.lookupAddress(mode)
+	return c.branch(!c.Flags.Carry, target)
+}
+
+func (c *CPU) opBEQ(mode AddressingMode) (extraCycles Cycles) {
+	target, _ := c.lookupAddress(mode)
+	return c.branch(c.Flags.Zero, target)
+}
+
+func (c *CPU) opBNE(mode AddressingMode) (extraCycles Cycles) {
+	target, _ := c.lookupAddress(mode)
+	return c.branch(!c.Flags.Zero, target)
+}
+
+func (c *CPU) opBMI(mode AddressingMode) (extraCycles Cycles) {
+	target, _ := c.lookupAddress(mode)
+	return c.branch(c.Flags.Negative, target)
+}
+
+func (c *CPU) opBPL(mode AddressingMode) (extraCycles Cycles) {
+	target, _ := c.lookupAddress(mode)
+	return c.branch(!c.Flags.Negative, target)
+}
+
+func (c *CPU) opBVS(mode AddressingMode) (extraCycles Cycles) {
+	target, _ := c.lookupAddress(mode)
+	return c.branch(c.Flags.Overflow, target)
+}
+
+func (c *CPU) opBVC(mode AddressingMode) (extraCycles Cycles) {
+	target, _ := c.lookupAddress(mode)
+	return c.branch(!c.Flags.Overflow, target)
 }
