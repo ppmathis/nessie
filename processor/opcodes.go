@@ -77,3 +77,30 @@ func (c *CPU) opDEY(mode AddressingMode) (extraCycles Cycles) {
 	c.Registers.Y = result
 	return
 }
+
+func (c *CPU) opCMP(mode AddressingMode) (extraCycles Cycles) {
+	address, extraCycles := c.lookupAddress(mode)
+	value := c.Memory.Peek(address)
+
+	c.setFlagsZN(c.Registers.A - value)
+	c.Flags.Carry = c.Registers.A >= value
+	return
+}
+
+func (c *CPU) opCPX(mode AddressingMode) (extraCycles Cycles) {
+	address, _ := c.lookupAddress(mode)
+	value := c.Memory.Peek(address)
+
+	c.setFlagsZN(c.Registers.X - value)
+	c.Flags.Carry = c.Registers.X >= value
+	return
+}
+
+func (c *CPU) opCPY(mode AddressingMode) (extraCycles Cycles) {
+	address, _ := c.lookupAddress(mode)
+	value := c.Memory.Peek(address)
+
+	c.setFlagsZN(c.Registers.Y - value)
+	c.Flags.Carry = c.Registers.Y >= value
+	return
+}

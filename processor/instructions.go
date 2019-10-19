@@ -88,6 +88,32 @@ func (c *CPU) registerInstructions() {
 	c.instructions.registerVariants("DEY", c.opDEY,
 		InstructionVariant{0x88, Implicit, 2},
 	)
+
+	// CMP - Compare
+	c.instructions.registerVariants("CMP", c.opCMP,
+		InstructionVariant{0xC9, Immediate, 2},
+		InstructionVariant{0xC5, ZeroPage, 3},
+		InstructionVariant{0xD5, ZeroPageX, 4},
+		InstructionVariant{0xCD, Absolute, 4},
+		InstructionVariant{0xDD, AbsoluteX, 4},
+		InstructionVariant{0xD9, AbsoluteY, 4},
+		InstructionVariant{0xC1, IndirectX, 6},
+		InstructionVariant{0xD1, IndirectY, 5},
+	)
+
+	// CPX - Compare X Register
+	c.instructions.registerVariants("CPX", c.opCPX,
+		InstructionVariant{0xE0, Immediate, 2},
+		InstructionVariant{0xE4, ZeroPage, 3},
+		InstructionVariant{0xEC, Absolute, 4},
+	)
+
+	// CPY - Compare Y Register
+	c.instructions.registerVariants("CPY", c.opCPY,
+		InstructionVariant{0xC0, Immediate, 2},
+		InstructionVariant{0xC4, ZeroPage, 3},
+		InstructionVariant{0xCC, Absolute, 4},
+	)
 }
 
 func (t *InstructionTable) registerVariant(mnemonic string, handler OpcodeHandler, variant InstructionVariant) {

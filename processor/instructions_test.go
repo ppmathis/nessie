@@ -212,8 +212,6 @@ func TestINY(t *testing.T) {
 	testINY(0x7F, 0x80, false, true)
 }
 
-
-
 func testDEC(t *testing.T) {
 	testDEC := func(value uint8, result uint8, isZero bool, isNegative bool) {
 		fmt.Printf("testDEC[%d] =? %d\n", value, result)
@@ -264,4 +262,61 @@ func TestDEY(t *testing.T) {
 	testDEY(0x01, 0x00, true, false)
 	testDEY(0x00, 0xFF, false, true)
 	testDEY(0x80, 0x7F, false, false)
+}
+
+func TestCMP(t *testing.T) {
+	testCMP := func(a uint8, b uint8, isCarry bool, isZero bool, isNegative bool) {
+		fmt.Printf("testCMP[%d, %d] =? C:%v Z:%v N:%v\n", a, b, isCarry, isZero, isNegative)
+		testImmediate(0xC9, b, Registers{A: a})
+
+		flags := testFlags{}
+		flags.Add(FlagCarry, isCarry)
+		flags.Add(FlagZero, isZero)
+		flags.Add(FlagNegative, isNegative)
+
+		assertCPU(t, 2, flags, testRegister{register: RegisterA, expected: uint16(a)})
+	}
+
+	testCMP(0x01, 0xFF, false, false, false)
+	testCMP(0x7F, 0x80, false, false, true)
+	testCMP(0x40, 0x20, true, false, false)
+	testCMP(0x42, 0x42, true, true, false)
+}
+
+func TestCPX(t *testing.T) {
+	testCPX := func(a uint8, b uint8, isCarry bool, isZero bool, isNegative bool) {
+		fmt.Printf("testCPX[%d, %d] =? C:%v Z:%v N:%v\n", a, b, isCarry, isZero, isNegative)
+		testImmediate(0xE0, b, Registers{X: a})
+
+		flags := testFlags{}
+		flags.Add(FlagCarry, isCarry)
+		flags.Add(FlagZero, isZero)
+		flags.Add(FlagNegative, isNegative)
+
+		assertCPU(t, 2, flags, testRegister{register: RegisterX, expected: uint16(a)})
+	}
+
+	testCPX(0x01, 0xFF, false, false, false)
+	testCPX(0x7F, 0x80, false, false, true)
+	testCPX(0x40, 0x20, true, false, false)
+	testCPX(0x42, 0x42, true, true, false)
+}
+
+func TestCPY(t *testing.T) {
+	testCPY := func(a uint8, b uint8, isCarry bool, isZero bool, isNegative bool) {
+		fmt.Printf("testCPY[%d, %d] =? C:%v Z:%v N:%v\n", a, b, isCarry, isZero, isNegative)
+		testImmediate(0xC0, b, Registers{Y: a})
+
+		flags := testFlags{}
+		flags.Add(FlagCarry, isCarry)
+		flags.Add(FlagZero, isZero)
+		flags.Add(FlagNegative, isNegative)
+
+		assertCPU(t, 2, flags, testRegister{register: RegisterY, expected: uint16(a)})
+	}
+
+	testCPY(0x01, 0xFF, false, false, false)
+	testCPY(0x7F, 0x80, false, false, true)
+	testCPY(0x40, 0x20, true, false, false)
+	testCPY(0x42, 0x42, true, true, false)
 }
