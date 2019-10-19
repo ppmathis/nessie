@@ -1,0 +1,4 @@
+package nessie
+
+func main() {
+}
