@@ -194,3 +194,21 @@ func (c *CPU) opBVC(mode AddressingMode) (extraCycles Cycles) {
 	target, _ := c.lookupAddress(mode)
 	return c.branch(!c.Flags.Overflow, target)
 }
+
+func (c *CPU) opSTA(mode AddressingMode) (extraCycles Cycles) {
+	address, _ := c.lookupAddress(mode)
+	c.Memory.Poke(address, c.Registers.A)
+	return
+}
+
+func (c *CPU) opSTX(mode AddressingMode) (extraCycles Cycles) {
+	address, _ := c.lookupAddress(mode)
+	c.Memory.Poke(address, c.Registers.X)
+	return
+}
+
+func (c *CPU) opSTY(mode AddressingMode) (extraCycles Cycles) {
+	address, _ := c.lookupAddress(mode)
+	c.Memory.Poke(address, c.Registers.Y)
+	return
+}

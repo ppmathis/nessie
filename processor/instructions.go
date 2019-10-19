@@ -184,6 +184,31 @@ func (c *CPU) registerInstructions() {
 	c.instructions.registerVariants("BVC", c.opBVC,
 		InstructionVariant{0x50, Relative, 2},
 	)
+
+	// STA - Store Accumulator
+	c.instructions.registerVariants("STA", c.opSTA,
+		InstructionVariant{0x85, ZeroPage, 3},
+		InstructionVariant{0x95, ZeroPageX, 4},
+		InstructionVariant{0x8D, Absolute, 4},
+		InstructionVariant{0x9D, AbsoluteX, 5},
+		InstructionVariant{0x99, AbsoluteY, 5},
+		InstructionVariant{0x81, IndirectX, 6},
+		InstructionVariant{0x91, IndirectY, 6},
+	)
+
+	// STX - Store X Register
+	c.instructions.registerVariants("STX", c.opSTX,
+		InstructionVariant{0x86, ZeroPage, 3},
+		InstructionVariant{0x96, ZeroPageY, 4},
+		InstructionVariant{0x8E, Absolute, 4},
+	)
+
+	// STY - Store Y Register
+	c.instructions.registerVariants("STY", c.opSTY,
+		InstructionVariant{0x84, ZeroPage, 3},
+		InstructionVariant{0x94, ZeroPageX, 4},
+		InstructionVariant{0x8C, Absolute, 4},
+	)
 }
 
 func (t *InstructionTable) registerVariant(mnemonic string, handler OpcodeHandler, variant InstructionVariant) {

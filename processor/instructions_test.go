@@ -549,3 +549,42 @@ func TestBVC(t *testing.T) {
 	testBVC(+10, false, true, 3)
 	testBVC(-10, false, true, 4)
 }
+
+func TestSTA(t *testing.T) {
+	testSTA := func(value uint8) {
+		fmt.Printf("testSTA[A=0x%02X]\n", value)
+		testAbsolute(0x8D, value, Registers{A: value})
+
+		assertCPU(t, 4, testFlags{}, testRegister{register: RegisterA, expected: uint16(value)})
+		assertMemory(t, TestAbsoluteAddress, value)
+	}
+
+	testSTA(0x13)
+	testSTA(0x37)
+}
+
+func TestSTX(t *testing.T) {
+	testSTX := func(value uint8) {
+		fmt.Printf("testSTX[A=0x%02X]\n", value)
+		testAbsolute(0x8E, value, Registers{X: value})
+
+		assertCPU(t, 4, testFlags{}, testRegister{register: RegisterX, expected: uint16(value)})
+		assertMemory(t, TestAbsoluteAddress, value)
+	}
+
+	testSTX(0x13)
+	testSTX(0x37)
+}
+
+func TestSTY(t *testing.T) {
+	testSTY := func(value uint8) {
+		fmt.Printf("testSTY[A=0x%02X]\n", value)
+		testAbsolute(0x8C, value, Registers{Y: value})
+
+		assertCPU(t, 4, testFlags{}, testRegister{register: RegisterY, expected: uint16(value)})
+		assertMemory(t, TestAbsoluteAddress, value)
+	}
+
+	testSTY(0x13)
+	testSTY(0x37)
+}
