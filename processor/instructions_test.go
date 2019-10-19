@@ -283,7 +283,7 @@ func TestDEY(t *testing.T) {
 
 func TestCMP(t *testing.T) {
 	testCMP := func(a uint8, b uint8, isCarry bool, isZero bool, isNegative bool) {
-		fmt.Printf("testCMP[%d, %d] =? C:%v Z:%v N:%v\n", a, b, isCarry, isZero, isNegative)
+		fmt.Printf("testCMP[%d, %d] =? C:%t Z:%t N:%t\n", a, b, isCarry, isZero, isNegative)
 		testImmediate(0xC9, b, Registers{A: a})
 
 		flags := testFlags{}
@@ -357,7 +357,7 @@ func TestTAX(t *testing.T) {
 
 func TestTXA(t *testing.T) {
 	testTXA := func(value uint8, isZero bool, isNegative bool) {
-		fmt.Printf("testTXA[%d] =? Z:%v N:%v\n", value, isZero, isNegative)
+		fmt.Printf("testTXA[%d] =? Z:%t N:%t\n", value, isZero, isNegative)
 		testImplicit(0x8A, Registers{X: value})
 
 		flags := testFlags{}
@@ -374,7 +374,7 @@ func TestTXA(t *testing.T) {
 
 func TestTAY(t *testing.T) {
 	testTAY := func(value uint8, isZero bool, isNegative bool) {
-		fmt.Printf("testTAY[%d] =? Z:%v N:%v\n", value, isZero, isNegative)
+		fmt.Printf("testTAY[%d] =? Z:%t N:%t\n", value, isZero, isNegative)
 		testImplicit(0xA8, Registers{A: value})
 
 		flags := testFlags{}
@@ -391,7 +391,7 @@ func TestTAY(t *testing.T) {
 
 func TestTXY(t *testing.T) {
 	testTXY := func(value uint8, isZero bool, isNegative bool) {
-		fmt.Printf("testTXY[%d] =? Z:%v N:%v\n", value, isZero, isNegative)
+		fmt.Printf("testTXY[%d] =? Z:%t N:%t\n", value, isZero, isNegative)
 		testImplicit(0x98, Registers{Y: value})
 
 		flags := testFlags{}
