@@ -274,6 +274,42 @@ func (c *CPU) registerInstructions() {
 	c.instructions.registerVariants("CLV", c.opCLV,
 		InstructionVariant{0xB8, Implicit, 2},
 	)
+
+	// JMP - Jump
+	c.instructions.registerVariants("JMP", c.opJMP,
+		InstructionVariant{0x4C, Absolute, 3},
+		InstructionVariant{0x6C, Indirect, 5},
+	)
+
+	// JSR - Jump to Subroutine
+	c.instructions.registerVariants("JSR", c.opJSR,
+		InstructionVariant{0x20, Absolute, 6},
+	)
+
+	// RTS - Return from Subroutine
+	c.instructions.registerVariants("RTS", c.opRTS,
+		InstructionVariant{0x60, Implicit, 6},
+	)
+
+	// PHA - Push Accumulator
+	c.instructions.registerVariants("PHA", c.opPHA,
+		InstructionVariant{0x48, Implicit, 3},
+	)
+
+	// PLA - Pull Accumulator
+	c.instructions.registerVariants("PLA", c.opPLA,
+		InstructionVariant{0x68, Implicit, 4},
+	)
+
+	// PHP - Push Processor Status
+	c.instructions.registerVariants("PHP", c.opPHP,
+		InstructionVariant{0x08, Implicit, 3},
+	)
+
+	// PLP - Pull Processor Status
+	c.instructions.registerVariants("PLP", c.opPLP,
+		InstructionVariant{0x28, Implicit, 4},
+	)
 }
 
 func (t *InstructionTable) registerVariant(mnemonic string, handler OpcodeHandler, variant InstructionVariant) {

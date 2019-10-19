@@ -274,3 +274,82 @@ func (c *CPU) opLDY(mode AddressingMode) (extraCycles Cycles) {
 	c.Registers.Y = result
 	return
 }
+
+func (c *CPU) opJMP(mode AddressingMode) (extraCycles Cycles) {
+	target, _ := c.lookupAddress(mode)
+	c.Registers.PC = target
+	return
+}
+
+func (c *CPU) opJSR(mode AddressingMode) (extraCycles Cycles) {
+	target, _ := c.lookupAddress(mode)
+	c.Push16(c.Registers.PC - 1)
+	c.Registers.PC = target
+	return
+}
+
+func (c *CPU) opRTS(mode AddressingMode) (extraCycles Cycles) {
+	target := c.Pop16() + 1
+	c.Registers.PC = target
+	return
+}
+
+func (c *CPU) opPHA(mode AddressingMode) (extraCycles Cycles) {
+	c.Push(c.Registers.A)
+	return
+}
+
+func (c *CPU) opPLA(mode AddressingMode) (extraCycles Cycles) {
+	result := c.setFlagsZN(c.Pop())
+	c.Registers.A = result
+	return
+}
+
+func (c *CPU) opPHP(mode AddressingMode) (extraCycles Cycles) {
+	var value uint8
+
+	if c.Flags.Carry {
+		value |= 0x1 << 0
+	}
+	if c.Flags.Zero {
+		value |= 0x1 << 1
+	}
+	if c.Flags.InterruptDisable {
+		value |= 0x1 << 2
+	}
+	if c.Flags.Decimal {
+		value |= 0x1 << 3
+	}
+	if c.Flags.Overflow {
+		value |= 0x1 << 6
+	}
+	if c.Flags.Negative {
+		value |= 0x1 << 7
+	}
+
+	switch c.Flags.Origin {
+	case FlagOriginPHP:
+		value |= 0x3 << 4
+	case FlagOriginBRK:
+		value |= 0x3 << 4
+		c.Flags.InterruptDisable = true
+	case FlagOriginIRQ, FlagOriginNMI:
+		value |= 0x2 << 4
+		c.Flags.InterruptDisable = true
+	}
+
+	c.Push(value)
+	return
+}
+
+func (c *CPU) opPLP(mode AddressingMode) (extraCycles Cycles) {
+	value := c.Pop()
+	c.Flags.Carry = (value>>0)&0x1 == 0x1
+	c.Flags.Zero = (value>>1)&0x1 == 0x1
+	c.Flags.InterruptDisable = (value>>2)&0x1 == 0x1
+	c.Flags.Decimal = (value>>3)&0x1 == 0x1
+	c.Flags.Overflow = (value>>6)&0x1 == 0x1
+	c.Flags.Negative = (value>>7)&0x1 == 0x1
+
+	return
+}

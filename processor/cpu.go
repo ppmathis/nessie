@@ -64,8 +64,11 @@ func NewCPU() (cpu *CPU) {
 	cpu = &CPU{
 		TotalCycles: 0,
 		Flags:       Flags{},
-		Registers:   Registers{},
-		Memory:      NewBasicMemory(),
+		Registers: Registers{
+			PC: 0xFFFC,
+			S:  0xFD,
+		},
+		Memory: NewBasicMemory(),
 	}
 
 	cpu.registerAddressingHandlers()
@@ -86,6 +89,30 @@ func (c *CPU) Execute() {
 	cycles := instruction.Variant.StaticCycles
 	cycles += instruction.Handler(instruction.Variant.AddressingMode)
 	c.TotalCycles += cycles
+}
+
+func (c *CPU) Push(value uint8) {
+	address := 0x0100 | uint16(c.Registers.S)
+	c.Memory.Poke(address, value)
+	c.Registers.S--
+}
+
+func (c *CPU) Push16(value uint16) {
+	c.Push(uint8(value >> 8))
+	c.Push(uint8(value))
+}
+
+func (c *CPU) Pop() (value uint8) {
+	c.Registers.S++
+	address := 0x0100 | uint16(c.Registers.S)
+	value = c.Memory.Peek(address)
+	return
+}
+
+func (c *CPU) Pop16() (value uint16) {
+	value = uint16(c.Pop())
+	value |= uint16(c.Pop()) << 8
+	return
 }
 
 func (c *CPU) GetRegister(register Register) uint16 {

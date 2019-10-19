@@ -135,6 +135,15 @@ func testAbsolute(opcode uint8, value uint8, registers Registers) {
 	cpu.Execute()
 }
 
+func testAbsoluteAddress(opcode uint8, address uint16) {
+	setup()
+
+	cpu.Registers.PC = 0x0100
+	cpu.Memory.Poke(0x0100, opcode)
+	cpu.Memory.Poke16(0x0101, address)
+	cpu.Execute()
+}
+
 func TestAND(t *testing.T) {
 	testAND := func(a uint8, b uint8, result uint8, isZero bool, isNegative bool) {
 		fmt.Printf("testAND[%d, %d] =? %d\n", a, b, result)
@@ -688,4 +697,108 @@ func TestLDY(t *testing.T) {
 
 	testLDY(0x13)
 	testLDY(0x37)
+}
+
+func TestJMP(t *testing.T) {
+	testAbsoluteAddress(0x4C, 0xBEEF)
+	assertCPU(t, 3, testFlags{}, testRegister{register: RegisterPC, expected: 0xBEEF})
+}
+
+func TestJSR(t *testing.T) {
+	testAbsoluteAddress(0x20, 0xBEEF)
+	assertCPU(t, 6, testFlags{},
+		testRegister{register: RegisterPC, expected: 0xBEEF},
+		testRegister{register: RegisterS, expected: 0xFB},
+	)
+	assertMemory(t, 0x01FD, 0x01)
+	assertMemory(t, 0x01FC, 0x02)
+}
+
+func TestRTS(t *testing.T) {
+	setup()
+
+	cpu.Registers.PC = 0x0100
+	cpu.Registers.S = 0xFB
+	cpu.Memory.Poke(0x0100, 0x60)
+	cpu.Memory.Poke16(0x01FC, 0x1233)
+	cpu.Execute()
+
+	assertCPU(t, 6, testFlags{},
+		testRegister{register: RegisterPC, expected: 0x1234},
+		testRegister{register: RegisterS, expected: 0xFD},
+	)
+	assertMemory(t, 0x01FD, 0x12)
+	assertMemory(t, 0x01FC, 0x33)
+}
+
+func TestPHA(t *testing.T) {
+	testImplicit(0x48, Registers{A: 0x42, S: 0xFD})
+
+	assertCPU(t, 3, testFlags{},
+		testRegister{register: RegisterS, expected: 0xFC},
+	)
+	assertMemory(t, 0x01FD, 0x42)
+}
+
+func TestPLA(t *testing.T) {
+	testPLA := func(value uint8, isZero bool, isNegative bool) {
+		fmt.Printf("testPLA[0x%02X] =? Z:%t N:%t\n", value, isZero, isNegative)
+
+		setup()
+		cpu.Registers.PC = 0x0100
+		cpu.Registers.S = 0xFC
+		cpu.Memory.Poke(0x0100, 0x68)
+		cpu.Memory.Poke(0x01FD, value)
+		cpu.Execute()
+
+		flags := testFlags{}
+		flags.Add(FlagZero, isZero)
+		flags.Add(FlagNegative, isNegative)
+
+		assertCPU(t, 4, flags, testRegister{register: RegisterA, expected: uint16(value)})
+	}
+
+	testPLA(0x42, false, false)
+	testPLA(0x00, true, false)
+	testPLA(0x80, false, true)
+}
+
+func TestPHP(t *testing.T) {
+	testPHP := func(flags Flags, expected uint8) {
+		fmt.Printf("testPHP[C:%t Z:%t I:%t D:%t B:%d V:%t N:%t]\n",
+			flags.Carry, flags.Zero, flags.InterruptDisable, flags.Decimal,
+			flags.Origin, flags.Overflow, flags.Negative)
+		testImplicitFlags(0x08, flags)
+
+		assertCPU(t, 3, testFlags{})
+		assertMemory(t, 0x01FD, expected)
+	}
+
+	testPHP(Flags{
+		Carry: true, Zero: true, InterruptDisable: true, Decimal: true,
+		Origin: FlagOriginPHP, Overflow: true, Negative: true,
+	}, 0xFF)
+	testPHP(Flags{
+		Carry: false, Zero: false, InterruptDisable: false, Decimal: false,
+		Origin: FlagOriginNMI, Overflow: false, Negative: false,
+	}, 0x20)
+}
+
+func TestPLP(t *testing.T) {
+	setup()
+
+	cpu.Registers.PC = 0x0100
+	cpu.Registers.S = 0xFC
+	cpu.Memory.Poke(0x0100, 0x28)
+	cpu.Memory.Poke(0x01FD, 0xFF)
+	cpu.Execute()
+
+	flags := testFlags{enabled: []Flag{
+		FlagCarry, FlagZero, FlagInterruptDisable, FlagDecimal, FlagOverflow, FlagNegative,
+	}}
+
+	assertCPU(t, 4, flags)
+	if cpu.Flags.Origin != 0x00 {
+		t.Errorf("expected flag origin to be 0b00 (ignored by PLP)\n")
+	}
 }
