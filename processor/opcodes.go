@@ -247,3 +247,30 @@ func (c *CPU) opCLV(mode AddressingMode) (extraCycles Cycles) {
 	c.Flags.Overflow = false
 	return
 }
+
+func (c *CPU) opLDA(mode AddressingMode) (extraCycles Cycles) {
+	address, extraCycles := c.lookupAddress(mode)
+	value := c.Memory.Peek(address)
+
+	result := c.setFlagsZN(value)
+	c.Registers.A = result
+	return
+}
+
+func (c *CPU) opLDX(mode AddressingMode) (extraCycles Cycles) {
+	address, extraCycles := c.lookupAddress(mode)
+	value := c.Memory.Peek(address)
+
+	result := c.setFlagsZN(value)
+	c.Registers.X = result
+	return
+}
+
+func (c *CPU) opLDY(mode AddressingMode) (extraCycles Cycles) {
+	address, extraCycles := c.lookupAddress(mode)
+	value := c.Memory.Peek(address)
+
+	result := c.setFlagsZN(value)
+	c.Registers.Y = result
+	return
+}

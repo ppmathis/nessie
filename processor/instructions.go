@@ -185,6 +185,36 @@ func (c *CPU) registerInstructions() {
 		InstructionVariant{0x50, Relative, 2},
 	)
 
+	// LDA - Load Accumulator
+	c.instructions.registerVariants("LDA", c.opLDA,
+		InstructionVariant{0xA9, Immediate, 2},
+		InstructionVariant{0xA5, ZeroPage, 3},
+		InstructionVariant{0xB5, ZeroPageX, 4},
+		InstructionVariant{0xAD, Absolute, 4},
+		InstructionVariant{0xBD, AbsoluteX, 4},
+		InstructionVariant{0xB9, AbsoluteY, 4},
+		InstructionVariant{0xA1, IndirectX, 6},
+		InstructionVariant{0xB1, IndirectY, 5},
+	)
+
+	// LDX - Load X Register
+	c.instructions.registerVariants("LDX", c.opLDX,
+		InstructionVariant{0xA2, Immediate, 2},
+		InstructionVariant{0xA6, ZeroPage, 3},
+		InstructionVariant{0xB6, ZeroPageY, 4},
+		InstructionVariant{0xAE, Absolute, 4},
+		InstructionVariant{0xBE, AbsoluteY, 4},
+	)
+
+	// LDY - Load Y Register
+	c.instructions.registerVariants("LDY", c.opLDY,
+		InstructionVariant{0xA0, Immediate, 2},
+		InstructionVariant{0xA4, ZeroPage, 3},
+		InstructionVariant{0xB4, ZeroPageX, 4},
+		InstructionVariant{0xAC, Absolute, 4},
+		InstructionVariant{0xBC, AbsoluteX, 4},
+	)
+
 	// STA - Store Accumulator
 	c.instructions.registerVariants("STA", c.opSTA,
 		InstructionVariant{0x85, ZeroPage, 3},

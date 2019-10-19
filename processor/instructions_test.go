@@ -653,3 +653,39 @@ func TestCLV(t *testing.T) {
 	testImplicitFlags(0xB8, Flags{Overflow: true})
 	assertCPU(t, 2, flags)
 }
+
+func TestLDA(t *testing.T) {
+	testLDA := func(value uint8) {
+		fmt.Printf("testLDA[0x%02X]\n", value)
+		testImmediate(0xA9, value, Registers{})
+
+		assertCPU(t, 2, testFlags{}, testRegister{register: RegisterA, expected: uint16(value)})
+	}
+
+	testLDA(0x13)
+	testLDA(0x37)
+}
+
+func TestLDX(t *testing.T) {
+	testLDX := func(value uint8) {
+		fmt.Printf("testLDX[0x%02X]\n", value)
+		testImmediate(0xA2, value, Registers{})
+
+		assertCPU(t, 2, testFlags{}, testRegister{register: RegisterX, expected: uint16(value)})
+	}
+
+	testLDX(0x13)
+	testLDX(0x37)
+}
+
+func TestLDY(t *testing.T) {
+	testLDY := func(value uint8) {
+		fmt.Printf("testLDY[0x%02X]\n", value)
+		testImmediate(0xA0, value, Registers{})
+
+		assertCPU(t, 2, testFlags{}, testRegister{register: RegisterY, expected: uint16(value)})
+	}
+
+	testLDY(0x13)
+	testLDY(0x37)
+}
