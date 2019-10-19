@@ -8,6 +8,8 @@ type Register int
 type Flag int
 type FlagOrigin int
 
+const ResetVector = 0xFFFE
+
 const (
 	RegisterPC Register = iota
 	RegisterS

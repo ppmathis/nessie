@@ -310,6 +310,27 @@ func (c *CPU) registerInstructions() {
 	c.instructions.registerVariants("PLP", c.opPLP,
 		InstructionVariant{0x28, Implicit, 4},
 	)
+
+	// NOP - No Operation
+	c.instructions.registerVariants("NOP", c.opNOP,
+		InstructionVariant{0xEA, Implicit, 2},
+	)
+
+	// RTI - Return from Interrupt
+	c.instructions.registerVariants("RTI", c.opRTI,
+		InstructionVariant{0x40, Implicit, 6},
+	)
+
+	// BRK - Force Interrupt
+	c.instructions.registerVariants("BRK", c.opBRK,
+		InstructionVariant{0x00, Implicit, 7},
+	)
+
+	// BIT - Bit Test
+	c.instructions.registerVariants("BIT", c.opBIT,
+		InstructionVariant{0x24, ZeroPage, 3},
+		InstructionVariant{0x2C, Absolute, 4},
+	)
 }
 
 func (t *InstructionTable) registerVariant(mnemonic string, handler OpcodeHandler, variant InstructionVariant) {

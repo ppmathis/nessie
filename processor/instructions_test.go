@@ -802,3 +802,62 @@ func TestPLP(t *testing.T) {
 		t.Errorf("expected flag origin to be 0b00 (ignored by PLP)\n")
 	}
 }
+
+func TestNOP(t *testing.T) {
+	testImplicit(0xEA, Registers{})
+}
+
+func TestRTI(t *testing.T) {
+	setup()
+
+	cpu.Registers.PC = 0x0100
+	cpu.Registers.S = 0xFA
+	cpu.Memory.Poke(0x0100, 0x40)
+	cpu.Memory.Poke16(0x01FC, 0x1234)
+	cpu.Memory.Poke(0x01FB, 0xFF)
+	cpu.Execute()
+
+	flags := testFlags{enabled: []Flag{
+		FlagCarry, FlagZero, FlagInterruptDisable, FlagDecimal, FlagOverflow, FlagNegative,
+	}}
+
+	assertCPU(t, 6, flags, testRegister{register: RegisterPC, expected: 0x1234})
+	if cpu.Flags.Origin != 0x00 {
+		t.Errorf("expected flag origin to be 0b00 (ignored by PLP)\n")
+	}
+}
+
+func TestBRK(t *testing.T) {
+	setup()
+
+	cpu.Registers.PC = 0x0100
+	cpu.Memory.Poke(0x0100, 0x00)
+	cpu.Memory.Poke16(ResetVector, 0x1234)
+	cpu.Execute()
+
+	flags := testFlags{disabled: []Flag{
+		FlagCarry, FlagZero, FlagInterruptDisable, FlagDecimal, FlagOverflow, FlagNegative,
+	}}
+
+	assertCPU(t, 7, flags, testRegister{register: RegisterPC, expected: 0x1234})
+}
+
+func TestBIT(t *testing.T) {
+	testBIT := func(a uint8, b uint8, isZero bool, isOverflow bool, isNegative bool) {
+		fmt.Printf("testBIT[0x%02X, 0x%02X] =? Z:%t V:%t N:%t\n", a, b, isZero, isOverflow, isNegative)
+		testAbsolute(0x2C, b, Registers{A: a})
+
+		flags := testFlags{}
+		flags.Add(FlagZero, isZero)
+		flags.Add(FlagOverflow, isOverflow)
+		flags.Add(FlagNegative, isNegative)
+
+		assertCPU(t, 4, flags, testRegister{register: RegisterA, expected: uint16(a)})
+		assertMemory(t, TestAbsoluteAddress, b)
+	}
+
+	testBIT(0x80, 0x01, true, false, false)
+	testBIT(0x03, 0x01, false, false, false)
+	testBIT(0x01, 0x81, false, false, true)
+	testBIT(0xFF, 0x7F, false, true, false)
+}

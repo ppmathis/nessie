@@ -353,3 +353,32 @@ func (c *CPU) opPLP(mode AddressingMode) (extraCycles Cycles) {
 
 	return
 }
+
+func (c *CPU) opNOP(mode AddressingMode) (extraCycles Cycles) {
+	return
+}
+
+func (c *CPU) opRTI(mode AddressingMode) (extraCycles Cycles) {
+	c.opPLP(Implicit)
+	c.Registers.PC = c.Pop16()
+	return
+}
+
+func (c *CPU) opBRK(mode AddressingMode) (extraCycles Cycles) {
+	c.Push16(c.Registers.PC)
+	c.opPHP(Implicit)
+	c.Registers.PC = c.Memory.Peek16(ResetVector)
+	c.Flags.Origin = FlagOriginBRK
+	return
+}
+
+func (c *CPU) opBIT(mode AddressingMode) (extraCycles Cycles) {
+	address, _ := c.lookupAddress(mode)
+	value := c.Memory.Peek(address)
+
+	result := value & c.Registers.A
+	c.Flags.Zero = result == 0
+	c.Flags.Overflow = (value>>6)&0x1 == 0x1
+	c.Flags.Negative = (value>>7)&0x1 == 0x1
+	return
+}
