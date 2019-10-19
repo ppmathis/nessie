@@ -104,3 +104,38 @@ func (c *CPU) opCPY(mode AddressingMode) (extraCycles Cycles) {
 	c.Flags.Carry = c.Registers.Y >= value
 	return
 }
+
+func (c *CPU) opTAX(mode AddressingMode) (extraCycles Cycles) {
+	result := c.setFlagsZN(c.Registers.A)
+	c.Registers.X = result
+	return
+}
+
+func (c *CPU) opTXA(mode AddressingMode) (extraCycles Cycles) {
+	result := c.setFlagsZN(c.Registers.X)
+	c.Registers.A = result
+	return
+}
+
+func (c *CPU) opTAY(mode AddressingMode) (extraCycles Cycles) {
+	result := c.setFlagsZN(c.Registers.A)
+	c.Registers.Y = result
+	return
+}
+
+func (c *CPU) opTYA(mode AddressingMode) (extraCycles Cycles) {
+	result := c.setFlagsZN(c.Registers.Y)
+	c.Registers.A = result
+	return
+}
+
+func (c *CPU) opTSX(mode AddressingMode) (extraCycles Cycles) {
+	result := c.setFlagsZN(c.Registers.S)
+	c.Registers.X = result
+	return
+}
+
+func (c *CPU) opTXS(mode AddressingMode) (extraCycles Cycles) {
+	c.Registers.S = c.Registers.X
+	return
+}

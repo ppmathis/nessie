@@ -320,3 +320,74 @@ func TestCPY(t *testing.T) {
 	testCPY(0x40, 0x20, true, false, false)
 	testCPY(0x42, 0x42, true, true, false)
 }
+
+func TestTAX(t *testing.T) {
+	testTAX := func(value uint8, isZero bool, isNegative bool) {
+		fmt.Printf("testTAX[%d] =? Z:%v N:%v\n", value, isZero, isNegative)
+		testImplicit(0xAA, Registers{A: value})
+
+		flags := testFlags{}
+		flags.Add(FlagZero, isZero)
+		flags.Add(FlagNegative, isNegative)
+
+		assertCPU(t, 2, flags, testRegister{register: RegisterX, expected: uint16(value)})
+	}
+
+	testTAX(0x42, false, false)
+	testTAX(0x00, true, false)
+	testTAX(0x80, false, true)
+}
+
+
+func TestTXA(t *testing.T) {
+	testTXA := func(value uint8, isZero bool, isNegative bool) {
+		fmt.Printf("testTXA[%d] =? Z:%v N:%v\n", value, isZero, isNegative)
+		testImplicit(0x8A, Registers{X: value})
+
+		flags := testFlags{}
+		flags.Add(FlagZero, isZero)
+		flags.Add(FlagNegative, isNegative)
+
+		assertCPU(t, 2, flags, testRegister{register: RegisterA, expected: uint16(value)})
+	}
+
+	testTXA(0x42, false, false)
+	testTXA(0x00, true, false)
+	testTXA(0x80, false, true)
+}
+
+func TestTAY(t *testing.T) {
+	testTAY := func(value uint8, isZero bool, isNegative bool) {
+		fmt.Printf("testTAY[%d] =? Z:%v N:%v\n", value, isZero, isNegative)
+		testImplicit(0xA8, Registers{A: value})
+
+		flags := testFlags{}
+		flags.Add(FlagZero, isZero)
+		flags.Add(FlagNegative, isNegative)
+
+		assertCPU(t, 2, flags, testRegister{register: RegisterY, expected: uint16(value)})
+	}
+
+	testTAY(0x42, false, false)
+	testTAY(0x00, true, false)
+	testTAY(0x80, false, true)
+}
+
+
+func TestTXY(t *testing.T) {
+	testTXY := func(value uint8, isZero bool, isNegative bool) {
+		fmt.Printf("testTXY[%d] =? Z:%v N:%v\n", value, isZero, isNegative)
+		testImplicit(0x98, Registers{Y: value})
+
+		flags := testFlags{}
+		flags.Add(FlagZero, isZero)
+		flags.Add(FlagNegative, isNegative)
+
+		assertCPU(t, 2, flags, testRegister{register: RegisterA, expected: uint16(value)})
+	}
+
+	testTXY(0x42, false, false)
+	testTXY(0x00, true, false)
+	testTXY(0x80, false, true)
+}
+

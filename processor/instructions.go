@@ -114,6 +114,36 @@ func (c *CPU) registerInstructions() {
 		InstructionVariant{0xC4, ZeroPage, 3},
 		InstructionVariant{0xCC, Absolute, 4},
 	)
+
+	// TAX - Transfer Accumulator to X
+	c.instructions.registerVariants("TAX", c.opTAX,
+		InstructionVariant{0xAA, Implicit, 2},
+	)
+
+	// TXA - Transfer X to Accumulator
+	c.instructions.registerVariants("TXA", c.opTXA,
+		InstructionVariant{0x8A, Implicit, 2},
+	)
+
+	// TAY - Transfer Accumulator to Y
+	c.instructions.registerVariants("TAY", c.opTAY,
+		InstructionVariant{0xA8, Implicit, 2},
+	)
+
+	// TYA - Transfer Y to Accumulator
+	c.instructions.registerVariants("TYA", c.opTYA,
+		InstructionVariant{0x98, Implicit, 2},
+	)
+
+	// TSX - Transfer Stack Pointer to X
+	c.instructions.registerVariant("TSX", c.opTSX,
+		InstructionVariant{0xBA, Implicit, 2},
+	)
+
+	// TXS - Transfer X to Stack Pointer
+	c.instructions.registerVariant("TXS", c.opTXS,
+		InstructionVariant{0x9A, Implicit, 2},
+	)
 }
 
 func (t *InstructionTable) registerVariant(mnemonic string, handler OpcodeHandler, variant InstructionVariant) {
