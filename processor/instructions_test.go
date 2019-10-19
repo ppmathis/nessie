@@ -861,3 +861,150 @@ func TestBIT(t *testing.T) {
 	testBIT(0x01, 0x81, false, false, true)
 	testBIT(0xFF, 0x7F, false, true, false)
 }
+
+func TestROL(t *testing.T) {
+	testROL := func(before uint8, after uint8, isCarry bool, isZero bool, isNegative bool) {
+		fmt.Printf("testROL[0x%02X] =? 0x%02X (C:%t Z:%t N:%t)\n", before, after, isCarry, isZero, isNegative)
+
+		implicitFlags := testFlags{}
+		implicitFlags.Add(FlagCarry, isCarry)
+		implicitFlags.Add(FlagZero, isZero)
+		implicitFlags.Add(FlagNegative, isNegative)
+
+		testImplicit(0x2A, Registers{A: before})
+		assertCPU(t, 2, implicitFlags, testRegister{register: RegisterA, expected: uint16(after)})
+
+		absoluteFlags := testFlags{}
+		absoluteFlags.Add(FlagCarry, isCarry)
+		absoluteFlags.Add(FlagZero, true)
+		absoluteFlags.Add(FlagNegative, isNegative)
+
+		testAbsolute(0x2E, before, Registers{A: 0x00})
+		assertCPU(t, 6, absoluteFlags)
+		assertMemory(t, TestAbsoluteAddress, after)
+	}
+
+	testROL(0x1, 0x2, false, false, false)
+	testROL(0x80, 0x0, true, true, false)
+}
+
+func TestROR(t *testing.T) {
+	testROR := func(before uint8, after uint8, isCarry bool, isZero bool, isNegative bool) {
+		fmt.Printf("testROR[0x%02X] =? 0x%02X (C:%t Z:%t N:%t)\n", before, after, isCarry, isZero, isNegative)
+
+		implicitFlags := testFlags{}
+		implicitFlags.Add(FlagCarry, isCarry)
+		implicitFlags.Add(FlagZero, isZero)
+		implicitFlags.Add(FlagNegative, isNegative)
+
+		testImplicit(0x6A, Registers{A: before})
+		assertCPU(t, 2, implicitFlags, testRegister{register: RegisterA, expected: uint16(after)})
+
+		absoluteFlags := testFlags{}
+		absoluteFlags.Add(FlagCarry, isCarry)
+		absoluteFlags.Add(FlagZero, true)
+		absoluteFlags.Add(FlagNegative, isNegative)
+
+		testAbsolute(0x6E, before, Registers{A: 0x00})
+		assertCPU(t, 6, absoluteFlags)
+		assertMemory(t, TestAbsoluteAddress, after)
+	}
+
+	testROR(0x2, 0x1, false, false, false)
+	testROR(0x1, 0x0, true, true, false)
+}
+
+func TestASL(t *testing.T) {
+	testASL := func(before uint8, after uint8, isCarry bool, isZero bool, isNegative bool) {
+		fmt.Printf("testASL[0x%02X] =? 0x%02X (C:%t Z:%t N:%t)\n", before, after, isCarry, isZero, isNegative)
+
+		implicitFlags := testFlags{}
+		implicitFlags.Add(FlagCarry, isCarry)
+		implicitFlags.Add(FlagZero, isZero)
+		implicitFlags.Add(FlagNegative, isNegative)
+
+		testImplicit(0x0A, Registers{A: before})
+		assertCPU(t, 2, implicitFlags, testRegister{register: RegisterA, expected: uint16(after)})
+
+		absoluteFlags := testFlags{}
+		absoluteFlags.Add(FlagCarry, isCarry)
+		absoluteFlags.Add(FlagZero, true)
+		absoluteFlags.Add(FlagNegative, isNegative)
+
+		testAbsolute(0x0E, before, Registers{A: 0x00})
+		assertCPU(t, 6, absoluteFlags)
+		assertMemory(t, TestAbsoluteAddress, after)
+	}
+
+	testASL(0x1, 0x2, false, false, false)
+	testASL(0x80, 0x0, true, true, false)
+	testASL(0x7F, 0xFE, false, false, true)
+}
+
+func TestLSR(t *testing.T) {
+	testLSR := func(before uint8, after uint8, isCarry bool, isZero bool, isNegative bool) {
+		fmt.Printf("testLSR[0x%02X] =? 0x%02X (C:%t Z:%t N:%t)\n", before, after, isCarry, isZero, isNegative)
+
+		implicitFlags := testFlags{}
+		implicitFlags.Add(FlagCarry, isCarry)
+		implicitFlags.Add(FlagZero, isZero)
+		implicitFlags.Add(FlagNegative, isNegative)
+
+		testImplicit(0x4A, Registers{A: before})
+		assertCPU(t, 2, implicitFlags, testRegister{register: RegisterA, expected: uint16(after)})
+
+		absoluteFlags := testFlags{}
+		absoluteFlags.Add(FlagCarry, isCarry)
+		absoluteFlags.Add(FlagZero, true)
+		absoluteFlags.Add(FlagNegative, isNegative)
+
+		testAbsolute(0x4E, before, Registers{A: 0x00})
+		assertCPU(t, 6, absoluteFlags)
+		assertMemory(t, TestAbsoluteAddress, after)
+	}
+
+	testLSR(0x80, 0x40, false, false, false)
+	testLSR(0x1, 0x0, true, true, false)
+	testLSR(0x3, 0x1, true, false, false)
+}
+
+func TestADC(t *testing.T) {
+	testADC := func(a uint8, b uint8, result uint8, isCarry bool, isZero bool, isOverflow bool, isNegative bool) {
+		fmt.Printf("testADC[0x%02X, 0x%02X] =? 0x%02X C:%t Z:%t V:%t N:%t\n",
+			a, b, result, isCarry, isZero, isOverflow, isNegative)
+		testImmediate(0x69, b, Registers{A: a})
+
+		flags := testFlags{}
+		flags.Add(FlagCarry, isCarry)
+		flags.Add(FlagZero, isZero)
+		flags.Add(FlagOverflow, isOverflow)
+		flags.Add(FlagNegative, isNegative)
+
+		assertCPU(t, 2, flags, testRegister{register: RegisterA, expected: uint16(result)})
+	}
+
+	testADC(0x10, 0x20, 0x30, false, false, false, false)
+	testADC(0x00, 0x00, 0x00, false, true, false, false)
+	testADC(0x40, 0x40, 0x80, false, false, true, true)
+	testADC(0xFF, 0xFF, 0xFE, true, false, false, true)
+}
+
+func TestSBC(t *testing.T) {
+	testSBC := func(a uint8, b uint8, result uint8, isCarry bool, isZero bool, isOverflow bool, isNegative bool) {
+		fmt.Printf("testSBC[0x%02X, 0x%02X] =? 0x%02X C:%t Z:%t V:%t N:%t\n",
+			a, b, result, isCarry, isZero, isOverflow, isNegative)
+		testImmediate(0xE9, b, Registers{A: a})
+
+		flags := testFlags{}
+		flags.Add(FlagCarry, isCarry)
+		flags.Add(FlagZero, isZero)
+		flags.Add(FlagOverflow, isOverflow)
+		flags.Add(FlagNegative, isNegative)
+
+		assertCPU(t, 2, flags, testRegister{register: RegisterA, expected: uint16(result)})
+	}
+
+	testSBC(0x30, 0x20, 0x0F, false, false, false, false)
+	testSBC(0x02, 0x01, 0x00, false, true, false, false)
+	testSBC(0x10, 0x20, 0xEF, true, false, true, true)
+}

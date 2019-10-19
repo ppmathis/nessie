@@ -382,3 +382,165 @@ func (c *CPU) opBIT(mode AddressingMode) (extraCycles Cycles) {
 	c.Flags.Negative = (value>>7)&0x1 == 0x1
 	return
 }
+
+func (c *CPU) opROL(mode AddressingMode) (extraCycles Cycles) {
+	var value uint8
+	var address uint16
+
+	if mode == Accumulator {
+		value = c.Registers.A
+	} else {
+		address, _ = c.lookupAddress(mode)
+		value = c.Memory.Peek(address)
+	}
+
+	previousCarry := (value>>7)&0x1 == 0x1
+	value <<= 1
+	if c.Flags.Carry {
+		value |= 1 << 0
+	} else {
+		value &^= 1 << 0
+	}
+
+	if mode == Accumulator {
+		c.Registers.A = value
+	} else {
+		c.Memory.Poke(address, value)
+	}
+
+	c.Flags.Carry = previousCarry
+	c.Flags.Zero = c.Registers.A == 0
+
+	return
+}
+
+func (c *CPU) opROR(mode AddressingMode) (extraCycles Cycles) {
+	var value uint8
+	var address uint16
+
+	if mode == Accumulator {
+		value = c.Registers.A
+	} else {
+		address, _ = c.lookupAddress(mode)
+		value = c.Memory.Peek(address)
+	}
+
+	previousCarry := (value>>0)&0x1 == 0x1
+	value >>= 1
+	if c.Flags.Carry {
+		value |= 1 << 7
+	} else {
+		value &^= 1 << 7
+	}
+
+	if mode == Accumulator {
+		c.Registers.A = value
+	} else {
+		c.Memory.Poke(address, value)
+	}
+
+	c.Flags.Carry = previousCarry
+	c.Flags.Zero = c.Registers.A == 0
+
+	return
+}
+
+func (c *CPU) opASL(mode AddressingMode) (extraCycles Cycles) {
+	var value uint8
+	var address uint16
+
+	if mode == Accumulator {
+		value = c.Registers.A
+	} else {
+		address, _ = c.lookupAddress(mode)
+		value = c.Memory.Peek(address)
+	}
+
+	previousCarry := (value>>7)&0x1 == 0x1
+	value <<= 1
+
+	if mode == Accumulator {
+		c.Registers.A = value
+	} else {
+		c.Memory.Poke(address, value)
+	}
+
+	c.Flags.Carry = previousCarry
+	c.Flags.Zero = c.Registers.A == 0
+	c.Flags.Negative = (value>>7)&0x1 == 0x1
+
+	return
+}
+
+func (c *CPU) opLSR(mode AddressingMode) (extraCycles Cycles) {
+	var value uint8
+	var address uint16
+
+	if mode == Accumulator {
+		value = c.Registers.A
+	} else {
+		address, _ = c.lookupAddress(mode)
+		value = c.Memory.Peek(address)
+	}
+
+	previousCarry := (value>>0)&0x1 == 0x1
+	value >>= 1
+
+	if mode == Accumulator {
+		c.Registers.A = value
+	} else {
+		c.Memory.Poke(address, value)
+	}
+
+	c.Flags.Carry = previousCarry
+	c.Flags.Zero = c.Registers.A == 0
+	c.Flags.Negative = (value>>7)&0x1 == 0x1
+
+	return
+}
+
+func (c *CPU) opADC(mode AddressingMode) (extraCycles Cycles) {
+	address, extraCycles := c.lookupAddress(mode)
+	value1 := uint16(c.Registers.A)
+	value2 := uint16(c.Memory.Peek(address))
+
+	result := value1 + value2
+	if c.Flags.Carry {
+		result++
+	}
+
+	signValue1 := (value1>>7)&0x1 == 0x1
+	signValue2 := (value2>>7)&0x1 == 0x1
+	signResult := (result>>7)&0x1 == 0x1
+
+	c.Registers.A = uint8(result & 0xFF)
+	c.Flags.Carry = (result>>8)&0x1 == 0x1
+	c.Flags.Zero = c.Registers.A == 0
+	c.Flags.Overflow = signValue1 == signValue2 && signValue1 != signResult
+	c.Flags.Negative = signResult
+
+	return
+}
+
+func (c *CPU) opSBC(mode AddressingMode) (extraCycles Cycles) {
+	address, extraCycles := c.lookupAddress(mode)
+	value1 := uint16(c.Registers.A)
+	value2 := uint16(c.Memory.Peek(address))
+
+	result := value1 - value2
+	if !c.Flags.Carry {
+		result--
+	}
+
+	signValue1 := (value1>>7)&0x1 == 0x1
+	signValue2 := (value2>>7)&0x1 == 0x1
+	signResult := (result>>7)&0x1 == 0x1
+
+	c.Registers.A = uint8(result & 0xFF)
+	c.Flags.Carry = (result>>8)&0x1 == 0x1
+	c.Flags.Zero = c.Registers.A == 0
+	c.Flags.Overflow = signValue1 == signValue2 && signValue1 != signResult
+	c.Flags.Negative = signResult
+
+	return
+}

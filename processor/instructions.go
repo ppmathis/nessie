@@ -331,6 +331,66 @@ func (c *CPU) registerInstructions() {
 		InstructionVariant{0x24, ZeroPage, 3},
 		InstructionVariant{0x2C, Absolute, 4},
 	)
+
+	// ROL - Rotate Left
+	c.instructions.registerVariants("ROL", c.opROL,
+		InstructionVariant{0x2A, Accumulator, 2},
+		InstructionVariant{0x26, ZeroPage, 5},
+		InstructionVariant{0x36, ZeroPageX, 6},
+		InstructionVariant{0x2E, Absolute, 6},
+		InstructionVariant{0x3E, AbsoluteX, 7},
+	)
+
+	// ROR - Rotate Right
+	c.instructions.registerVariants("ROR", c.opROR,
+		InstructionVariant{0x6A, Accumulator, 2},
+		InstructionVariant{0x66, ZeroPage, 5},
+		InstructionVariant{0x76, ZeroPageX, 6},
+		InstructionVariant{0x6E, Absolute, 6},
+		InstructionVariant{0x7E, AbsoluteX, 7},
+	)
+
+	// ASL - Arithmetic Shift Left
+	c.instructions.registerVariants("ASL", c.opASL,
+		InstructionVariant{0x0A, Accumulator, 2},
+		InstructionVariant{0x06, ZeroPage, 5},
+		InstructionVariant{0x16, ZeroPageX, 6},
+		InstructionVariant{0x0E, Absolute, 6},
+		InstructionVariant{0x1E, AbsoluteX, 7},
+	)
+
+	// LSR - Logical Shift Right
+	c.instructions.registerVariants("LSR", c.opLSR,
+		InstructionVariant{0x4A, Accumulator, 2},
+		InstructionVariant{0x46, ZeroPage, 5},
+		InstructionVariant{0x56, ZeroPageX, 6},
+		InstructionVariant{0x4E, Absolute, 6},
+		InstructionVariant{0x5E, AbsoluteX, 7},
+	)
+
+	// ADC - Add with Carry
+	c.instructions.registerVariants("ADC", c.opADC,
+		InstructionVariant{0x69, Immediate, 2},
+		InstructionVariant{0x65, ZeroPage, 3},
+		InstructionVariant{0x75, ZeroPageX, 4},
+		InstructionVariant{0x6D, Absolute, 4},
+		InstructionVariant{0x7D, AbsoluteX, 4},
+		InstructionVariant{0x79, AbsoluteY, 4},
+		InstructionVariant{0x61, IndirectX, 6},
+		InstructionVariant{0x71, IndirectY, 5},
+	)
+
+	// SBC - Subtract with Carry
+	c.instructions.registerVariants("SBC", c.opSBC,
+		InstructionVariant{0xE9, Immediate, 2},
+		InstructionVariant{0xE5, ZeroPage, 3},
+		InstructionVariant{0xF5, ZeroPageX, 4},
+		InstructionVariant{0xED, Absolute, 4},
+		InstructionVariant{0xFD, AbsoluteX, 4},
+		InstructionVariant{0xF9, AbsoluteY, 4},
+		InstructionVariant{0xE1, IndirectX, 6},
+		InstructionVariant{0xF1, IndirectY, 5},
+	)
 }
 
 func (t *InstructionTable) registerVariant(mnemonic string, handler OpcodeHandler, variant InstructionVariant) {
