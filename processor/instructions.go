@@ -52,14 +52,42 @@ func (c *CPU) registerInstructions() {
 		InstructionVariant{0x41, IndirectX, 6},
 		InstructionVariant{0x51, IndirectY, 5},
 	)
-}
 
-func (t *InstructionTable) register(mnemonic string, opcode Opcode, handler OpcodeHandler, mode AddressingMode, staticCycles Cycles) {
-	t.registerVariant(mnemonic, handler, InstructionVariant{
-		Opcode:         opcode,
-		AddressingMode: mode,
-		StaticCycles:   staticCycles,
-	})
+	// INC - Increment Memory
+	c.instructions.registerVariants("INC", c.opINC,
+		InstructionVariant{0xE6, ZeroPage, 5},
+		InstructionVariant{0xF6, ZeroPageX, 6},
+		InstructionVariant{0xEE, Absolute, 6},
+		InstructionVariant{0xFE, AbsoluteX, 7},
+	)
+
+	// INX - Increment X Register
+	c.instructions.registerVariants("INX", c.opINX,
+		InstructionVariant{0xE8, Implicit, 2},
+	)
+
+	// INY - Increment Y Register
+	c.instructions.registerVariants("INY", c.opINY,
+		InstructionVariant{0xC8, Implicit, 2},
+	)
+
+	// DEC - Decrement Memory
+	c.instructions.registerVariants("DEC", c.opDEC,
+		InstructionVariant{0xC6, ZeroPage, 5},
+		InstructionVariant{0xD6, ZeroPageX, 6},
+		InstructionVariant{0xCE, Absolute, 6},
+		InstructionVariant{0xDE, AbsoluteX, 7},
+	)
+
+	// DEX - Decrement X Register
+	c.instructions.registerVariants("DEX", c.opDEX,
+		InstructionVariant{0xCA, Implicit, 2},
+	)
+
+	// DEY - Decrement Y Register
+	c.instructions.registerVariants("DEY", c.opDEY,
+		InstructionVariant{0x88, Implicit, 2},
+	)
 }
 
 func (t *InstructionTable) registerVariant(mnemonic string, handler OpcodeHandler, variant InstructionVariant) {

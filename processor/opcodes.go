@@ -3,40 +3,77 @@ package processor
 type Opcode uint8
 type OpcodeHandler func(mode AddressingMode) (extraCycles Cycles)
 
-func (c *CPU) setZero() {
-	c.Flags.Zero = c.Registers.A == 0
-}
-
-func (c *CPU) setNegative() {
-	c.Flags.Negative = (c.Registers.A>>7)&0x1 == 1
+func (c *CPU) setFlagsZN(result uint8) uint8 {
+	c.Flags.Zero = result == 0
+	c.Flags.Negative = (result>>7)&0x1 == 1
+	return result
 }
 
 func (c *CPU) opAND(mode AddressingMode) (extraCycles Cycles) {
 	address, extraCycles := c.lookupAddress(mode)
 	value := c.Memory.Peek(address)
-	c.Registers.A &= value
 
-	c.setZero()
-	c.setNegative()
+	result := c.setFlagsZN(c.Registers.A & value)
+	c.Registers.A = result
 	return
 }
 
 func (c *CPU) opORA(mode AddressingMode) (extraCycles Cycles) {
 	address, extraCycles := c.lookupAddress(mode)
 	value := c.Memory.Peek(address)
-	c.Registers.A |= value
 
-	c.setZero()
-	c.setNegative()
+	result := c.setFlagsZN(c.Registers.A | value)
+	c.Registers.A = result
 	return
 }
 
 func (c *CPU) opEOR(mode AddressingMode) (extraCycles Cycles) {
 	address, extraCycles := c.lookupAddress(mode)
 	value := c.Memory.Peek(address)
-	c.Registers.A ^= value
 
-	c.setZero()
-	c.setNegative()
+	result := c.setFlagsZN(c.Registers.A ^ value)
+	c.Registers.A = result
+	return
+}
+
+func (c *CPU) opINC(mode AddressingMode) (extraCycles Cycles) {
+	address, _ := c.lookupAddress(mode)
+	value := c.Memory.Peek(address)
+
+	result := c.setFlagsZN(value + 1)
+	c.Memory.Poke(address, result)
+	return
+}
+
+func (c *CPU) opINX(mode AddressingMode) (extraCycles Cycles) {
+	result := c.setFlagsZN(c.Registers.X + 1)
+	c.Registers.X = result
+	return
+}
+
+func (c *CPU) opINY(mode AddressingMode) (extraCycles Cycles) {
+	result := c.setFlagsZN(c.Registers.Y + 1)
+	c.Registers.Y = result
+	return
+}
+
+func (c *CPU) opDEC(mode AddressingMode) (extraCycles Cycles) {
+	address, _ := c.lookupAddress(mode)
+	value := c.Memory.Peek(address)
+
+	result := c.setFlagsZN(value - 1)
+	c.Memory.Poke(address, result)
+	return
+}
+
+func (c *CPU) opDEX(mode AddressingMode) (extraCycles Cycles) {
+	result := c.setFlagsZN(c.Registers.X - 1)
+	c.Registers.X = result
+	return
+}
+
+func (c *CPU) opDEY(mode AddressingMode) (extraCycles Cycles) {
+	result := c.setFlagsZN(c.Registers.Y - 1)
+	c.Registers.Y = result
 	return
 }

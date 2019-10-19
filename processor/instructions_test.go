@@ -5,6 +5,8 @@ import (
 	"testing"
 )
 
+const TestAbsoluteAddress = 0x4242
+
 var cpu *CPU
 
 func setup() {
@@ -60,6 +62,14 @@ func assertRegister(t *testing.T, register Register, expected uint16) {
 	}
 }
 
+func assertMemory(t *testing.T, address uint16, expected uint8) {
+	actual := cpu.Memory.Peek(address)
+
+	if actual != expected {
+		t.Errorf("expected address [0x%04X] to contain [0x%02X], got [0x%02X]", address, expected, actual)
+	}
+}
+
 func assertCPU(t *testing.T, expectedCycles Cycles, flags testFlags, registers ...testRegister) {
 	assertCycles(t, expectedCycles)
 	assertFlags(t, flags.enabled, flags.disabled)
@@ -69,6 +79,15 @@ func assertCPU(t *testing.T, expectedCycles Cycles, flags testFlags, registers .
 	}
 }
 
+func testImplicit(opcode uint8, registers Registers) {
+	setup()
+
+	cpu.Registers = registers
+	cpu.Registers.PC = 0x0100
+	cpu.Memory.Poke(0x0100, opcode)
+	cpu.Execute()
+}
+
 func testImmediate(opcode uint8, argument uint8, registers Registers) {
 	setup()
 
@@ -76,6 +95,17 @@ func testImmediate(opcode uint8, argument uint8, registers Registers) {
 	cpu.Registers.PC = 0x0100
 	cpu.Memory.Poke(0x0100, opcode)
 	cpu.Memory.Poke(0x0101, argument)
+	cpu.Execute()
+}
+
+func testAbsolute(opcode uint8, value uint8, registers Registers) {
+	setup()
+
+	cpu.Registers = registers
+	cpu.Registers.PC = 0x0100
+	cpu.Memory.Poke(0x0100, opcode)
+	cpu.Memory.Poke16(0x0101, TestAbsoluteAddress)
+	cpu.Memory.Poke(TestAbsoluteAddress, value)
 	cpu.Execute()
 }
 
@@ -128,4 +158,110 @@ func TestEOR(t *testing.T) {
 	testEOR(0x10, 0x01, 0x11, false, false)
 	testEOR(0x10, 0x10, 0x00, true, false)
 	testEOR(0x81, 0x01, 0x80, false, true)
+}
+
+func TestINC(t *testing.T) {
+	testINC := func(value uint8, result uint8, isZero bool, isNegative bool) {
+		fmt.Printf("testINC[%d] =? %d\n", value, result)
+		testAbsolute(0xEE, value, Registers{})
+
+		flags := testFlags{}
+		flags.Add(FlagZero, isZero)
+		flags.Add(FlagNegative, isNegative)
+
+		assertCPU(t, 6, flags)
+		assertMemory(t, TestAbsoluteAddress, result)
+	}
+
+	testINC(0x0F, 0x10, false, false)
+	testINC(0xFF, 0x00, true, false)
+	testINC(0x7F, 0x80, false, true)
+}
+
+func TestINX(t *testing.T) {
+	testINX := func(value uint8, result uint8, isZero bool, isNegative bool) {
+		fmt.Printf("testINX[%d] =? %d\n", value, result)
+		testImplicit(0xE8, Registers{X: value})
+
+		flags := testFlags{}
+		flags.Add(FlagZero, isZero)
+		flags.Add(FlagNegative, isNegative)
+
+		assertCPU(t, 2, flags, testRegister{register: RegisterX, expected: uint16(result)})
+	}
+
+	testINX(0x0F, 0x10, false, false)
+	testINX(0xFF, 0x00, true, false)
+	testINX(0x7F, 0x80, false, true)
+}
+
+func TestINY(t *testing.T) {
+	testINY := func(value uint8, result uint8, isZero bool, isNegative bool) {
+		fmt.Printf("testINY[%d] =? %d\n", value, result)
+		testImplicit(0xC8, Registers{Y: value})
+
+		flags := testFlags{}
+		flags.Add(FlagZero, isZero)
+		flags.Add(FlagNegative, isNegative)
+
+		assertCPU(t, 2, flags, testRegister{register: RegisterY, expected: uint16(result)})
+	}
+
+	testINY(0x0F, 0x10, false, false)
+	testINY(0xFF, 0x00, true, false)
+	testINY(0x7F, 0x80, false, true)
+}
+
+
+
+func testDEC(t *testing.T) {
+	testDEC := func(value uint8, result uint8, isZero bool, isNegative bool) {
+		fmt.Printf("testDEC[%d] =? %d\n", value, result)
+		testAbsolute(0xCE, value, Registers{})
+
+		flags := testFlags{}
+		flags.Add(FlagZero, isZero)
+		flags.Add(FlagNegative, isNegative)
+
+		assertCPU(t, 6, flags)
+		assertMemory(t, TestAbsoluteAddress, result)
+	}
+
+	testDEC(0x01, 0x00, true, false)
+	testDEC(0x00, 0xFF, false, true)
+	testDEC(0x80, 0x7F, false, false)
+}
+
+func TestDEX(t *testing.T) {
+	testDEX := func(value uint8, result uint8, isZero bool, isNegative bool) {
+		fmt.Printf("testINX[%d] =? %d\n", value, result)
+		testImplicit(0xCA, Registers{X: value})
+
+		flags := testFlags{}
+		flags.Add(FlagZero, isZero)
+		flags.Add(FlagNegative, isNegative)
+
+		assertCPU(t, 2, flags, testRegister{register: RegisterX, expected: uint16(result)})
+	}
+
+	testDEX(0x01, 0x00, true, false)
+	testDEX(0x00, 0xFF, false, true)
+	testDEX(0x80, 0x7F, false, false)
+}
+
+func TestDEY(t *testing.T) {
+	testDEY := func(value uint8, result uint8, isZero bool, isNegative bool) {
+		fmt.Printf("testDEY[%d] =? %d\n", value, result)
+		testImplicit(0x88, Registers{Y: value})
+
+		flags := testFlags{}
+		flags.Add(FlagZero, isZero)
+		flags.Add(FlagNegative, isNegative)
+
+		assertCPU(t, 2, flags, testRegister{register: RegisterY, expected: uint16(result)})
+	}
+
+	testDEY(0x01, 0x00, true, false)
+	testDEY(0x00, 0xFF, false, true)
+	testDEY(0x80, 0x7F, false, false)
 }
