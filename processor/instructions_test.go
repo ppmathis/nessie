@@ -88,6 +88,15 @@ func testImplicit(opcode uint8, registers Registers) {
 	cpu.Execute()
 }
 
+func testImplicitFlags(opcode uint8, flags Flags) {
+	setup()
+
+	cpu.Flags = flags
+	cpu.Registers.PC = 0x0100
+	cpu.Memory.Poke(0x0100, opcode)
+	cpu.Execute()
+}
+
 func testRelative(opcode uint8, offset int8, flags Flags) {
 	setup()
 
@@ -587,4 +596,60 @@ func TestSTY(t *testing.T) {
 
 	testSTY(0x13)
 	testSTY(0x37)
+}
+
+func TestCLC(t *testing.T) {
+	flags := testFlags{}
+	flags.Add(FlagCarry, false)
+
+	testImplicitFlags(0x18, Flags{Carry: true})
+	assertCPU(t, 2, flags)
+}
+
+func TestSEC(t *testing.T) {
+	flags := testFlags{}
+	flags.Add(FlagCarry, true)
+
+	testImplicitFlags(0x38, Flags{Carry: false})
+	assertCPU(t, 2, flags)
+}
+
+func TestCLD(t *testing.T) {
+	flags := testFlags{}
+	flags.Add(FlagDecimal, false)
+
+	testImplicitFlags(0xD8, Flags{Decimal: true})
+	assertCPU(t, 2, flags)
+}
+
+func TestSED(t *testing.T) {
+	flags := testFlags{}
+	flags.Add(FlagDecimal, true)
+
+	testImplicitFlags(0xF8, Flags{Decimal: false})
+	assertCPU(t, 2, flags)
+}
+
+func TestCLI(t *testing.T) {
+	flags := testFlags{}
+	flags.Add(FlagInterruptDisable, false)
+
+	testImplicitFlags(0x58, Flags{InterruptDisable: true})
+	assertCPU(t, 2, flags)
+}
+
+func TestSEI(t *testing.T) {
+	flags := testFlags{}
+	flags.Add(FlagInterruptDisable, true)
+
+	testImplicitFlags(0x78, Flags{InterruptDisable: false})
+	assertCPU(t, 2, flags)
+}
+
+func TestCLV(t *testing.T) {
+	flags := testFlags{}
+	flags.Add(FlagOverflow, false)
+
+	testImplicitFlags(0xB8, Flags{Overflow: true})
+	assertCPU(t, 2, flags)
 }

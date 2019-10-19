@@ -212,3 +212,38 @@ func (c *CPU) opSTY(mode AddressingMode) (extraCycles Cycles) {
 	c.Memory.Poke(address, c.Registers.Y)
 	return
 }
+
+func (c *CPU) opCLC(mode AddressingMode) (extraCycles Cycles) {
+	c.Flags.Carry = false
+	return
+}
+
+func (c *CPU) opSEC(mode AddressingMode) (extraCycles Cycles) {
+	c.Flags.Carry = true
+	return
+}
+
+func (c *CPU) opCLD(mode AddressingMode) (extraCycles Cycles) {
+	c.Flags.Decimal = false
+	return
+}
+
+func (c *CPU) opSED(mode AddressingMode) (extraCycles Cycles) {
+	c.Flags.Decimal = true
+	return
+}
+
+func (c *CPU) opCLI(mode AddressingMode) (extraCycles Cycles) {
+	c.Flags.InterruptDisable = false
+	return
+}
+
+func (c *CPU) opSEI(mode AddressingMode) (extraCycles Cycles) {
+	c.Flags.InterruptDisable = true
+	return
+}
+
+func (c *CPU) opCLV(mode AddressingMode) (extraCycles Cycles) {
+	c.Flags.Overflow = false
+	return
+}

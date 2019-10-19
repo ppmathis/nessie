@@ -209,6 +209,41 @@ func (c *CPU) registerInstructions() {
 		InstructionVariant{0x94, ZeroPageX, 4},
 		InstructionVariant{0x8C, Absolute, 4},
 	)
+
+	// CLC - Clear Carry Flag
+	c.instructions.registerVariants("CLC", c.opCLC,
+		InstructionVariant{0x18, Implicit, 2},
+	)
+
+	// SEC - Set Carry Flag
+	c.instructions.registerVariants("SEC", c.opSEC,
+		InstructionVariant{0x38, Implicit, 2},
+	)
+
+	// CLD - Set Decimal Mode
+	c.instructions.registerVariants("CLD", c.opCLD,
+		InstructionVariant{0xD8, Implicit, 2},
+	)
+
+	// SED - Set Decimal Mode
+	c.instructions.registerVariants("SED", c.opSED,
+		InstructionVariant{0xF8, Implicit, 2},
+	)
+
+	// CLI - Clear Interrupt Disable
+	c.instructions.registerVariants("CLI", c.opCLI,
+		InstructionVariant{0x58, Implicit, 2},
+	)
+
+	// SEI - Set Interrupt Disable
+	c.instructions.registerVariants("SEI", c.opSEI,
+		InstructionVariant{0x78, Implicit, 2},
+	)
+
+	// CLV - Clear Overflow Flag
+	c.instructions.registerVariants("CLV", c.opCLV,
+		InstructionVariant{0xB8, Implicit, 2},
+	)
 }
 
 func (t *InstructionTable) registerVariant(mnemonic string, handler OpcodeHandler, variant InstructionVariant) {
