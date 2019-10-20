@@ -53,6 +53,7 @@ type Registers struct {
 }
 
 type CPU struct {
+	Debug       bool
 	TotalCycles Cycles
 	Flags       Flags
 	Registers   Registers
@@ -86,6 +87,34 @@ func (c *CPU) Execute() {
 	instruction, ok := c.instructions[opcode]
 	if !ok {
 		panic(fmt.Errorf("invalid opcode: 0x%02X", opcode))
+	}
+
+	if c.Debug {
+		var assembly string
+
+		switch instruction.Variant.AddressingMode {
+		case Implicit, Accumulator:
+			assembly = fmt.Sprintf("%02X      ",
+				c.Memory.Peek(c.Registers.PC-1),
+			)
+		case Immediate, ZeroPage, ZeroPageX, ZeroPageY, IndirectX, IndirectY, Relative:
+			assembly = fmt.Sprintf("%02X %02X   ",
+				c.Memory.Peek(c.Registers.PC-1),
+				c.Memory.Peek(c.Registers.PC),
+			)
+		case Absolute, AbsoluteX, AbsoluteY, Indirect:
+			assembly = fmt.Sprintf("%02X %02X %02X",
+				c.Memory.Peek(c.Registers.PC-1),
+				c.Memory.Peek(c.Registers.PC),
+				c.Memory.Peek(c.Registers.PC+1),
+			)
+		}
+
+		fmt.Printf("[0x%04X] %s - %s - A:%02X X:%02X Y:%02X S:%02X CYC:%d\n",
+			c.Registers.PC-1, assembly, instruction.Mnemonic,
+			c.Registers.A, c.Registers.X, c.Registers.Y, c.Registers.S,
+			c.TotalCycles,
+		)
 	}
 
 	cycles := instruction.Variant.StaticCycles

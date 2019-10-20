@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"nessie/cartridge"
 	"nessie/processor"
@@ -23,5 +22,9 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Printf("0xC000 = 0x%02X", cpu.Memory.Peek(0xC000))
+	cpu.Debug = true
+	cpu.Registers.PC = 0xC000
+	for true {
+		cpu.Execute()
+	}
 }
