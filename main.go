@@ -24,7 +24,7 @@ func main() {
 
 	cpu.Debug = true
 	cpu.Registers.PC = 0xC000
-	for true {
+	for !cpu.Halted {
 		cpu.Execute()
 	}
 }

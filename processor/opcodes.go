@@ -355,6 +355,10 @@ func (c *CPU) opPLP(mode AddressingMode) (extraCycles Cycles) {
 }
 
 func (c *CPU) opNOP(mode AddressingMode) (extraCycles Cycles) {
+	if mode != Implicit {
+		_, extraCycles = c.lookupAddress(mode)
+	}
+
 	return
 }
 
@@ -542,5 +546,58 @@ func (c *CPU) opSBC(mode AddressingMode) (extraCycles Cycles) {
 	c.Flags.Overflow = signValue1 == signValue2 && signValue1 != signResult
 	c.Flags.Negative = signResult
 
+	return
+}
+
+func (c *CPU) opLAX(mode AddressingMode) (extraCycles Cycles) {
+	extraCycles = c.opLDA(mode) // Re-use extra cycles from LDA opcode, as LAX behaves the same
+	_ = c.opLDX(mode)
+	return
+}
+
+func (c *CPU) opSAX(mode AddressingMode) (extraCycles Cycles) {
+	_ = c.opSTA(mode)
+	_ = c.opSTX(mode)
+	return
+}
+
+func (c *CPU) opDCP(mode AddressingMode) (extraCycles Cycles) {
+	_ = c.opDEC(mode)
+	_ = c.opCMP(mode)
+	return
+}
+
+func (c *CPU) opISC(mode AddressingMode) (extraCycles Cycles) {
+	_ = c.opINC(mode)
+	_ = c.opSBC(mode)
+	return
+}
+
+func (c *CPU) opSLO(mode AddressingMode) (extraCycles Cycles) {
+	_ = c.opASL(mode)
+	_ = c.opORA(mode)
+	return
+}
+
+func (c *CPU) opRLA(mode AddressingMode) (extraCycles Cycles) {
+	_ = c.opROL(mode)
+	_ = c.opAND(mode)
+	return
+}
+
+func (c *CPU) opSRE(mode AddressingMode) (extraCycles Cycles) {
+	_ = c.opLSR(mode)
+	_ = c.opEOR(mode)
+	return
+}
+
+func (c *CPU) opRRA(mode AddressingMode) (extraCycles Cycles) {
+	_ = c.opROR(mode)
+	_ = c.opADC(mode)
+	return
+}
+
+func (c *CPU) opKIL(mode AddressingMode) (extraCycles Cycles) {
+	c.Halted = true
 	return
 }

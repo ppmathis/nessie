@@ -314,6 +314,35 @@ func (c *CPU) registerInstructions() {
 	// NOP - No Operation
 	c.instructions.registerVariants("NOP", c.opNOP,
 		InstructionVariant{0xEA, Implicit, 2},
+
+		// Unofficial Opcodes
+		InstructionVariant{0x04, ZeroPage, 3},
+		InstructionVariant{0x0C, Absolute, 4},
+		InstructionVariant{0x14, ZeroPageX, 4},
+		InstructionVariant{0x1A, Implicit, 2},
+		InstructionVariant{0x1C, AbsoluteX, 4},
+		InstructionVariant{0x34, ZeroPageX, 4},
+		InstructionVariant{0x3A, Implicit, 2},
+		InstructionVariant{0x3C, AbsoluteX, 4},
+		InstructionVariant{0x44, ZeroPage, 3},
+		InstructionVariant{0x54, ZeroPageX, 4},
+		InstructionVariant{0x5A, Implicit, 2},
+		InstructionVariant{0x5C, AbsoluteX, 4},
+		InstructionVariant{0x64, ZeroPage, 3},
+		InstructionVariant{0x74, ZeroPageX, 4},
+		InstructionVariant{0x7A, Implicit, 2},
+		InstructionVariant{0x7C, AbsoluteX, 4},
+		InstructionVariant{0x80, Immediate, 2},
+		InstructionVariant{0x82, Immediate, 2},
+		InstructionVariant{0x89, Immediate, 2},
+		InstructionVariant{0xC2, Immediate, 2},
+		InstructionVariant{0xD4, ZeroPageX, 4},
+		InstructionVariant{0xDA, Implicit, 2},
+		InstructionVariant{0xDC, AbsoluteX, 4},
+		InstructionVariant{0xE2, Immediate, 2},
+		InstructionVariant{0xF4, ZeroPageX, 4},
+		InstructionVariant{0xFA, Implicit, 2},
+		InstructionVariant{0xFC, AbsoluteX, 4},
 	)
 
 	// RTI - Return from Interrupt
@@ -390,6 +419,109 @@ func (c *CPU) registerInstructions() {
 		InstructionVariant{0xF9, AbsoluteY, 4},
 		InstructionVariant{0xE1, IndirectX, 6},
 		InstructionVariant{0xF1, IndirectY, 5},
+
+		// Unofficial Opcodes
+		InstructionVariant{0xEB, Immediate, 2},
+	)
+
+	// [Unofficial] LAX - Load Accumulator and X Register
+	c.instructions.registerVariants("LAX", c.opLAX,
+		InstructionVariant{0xA3, IndirectX, 6},
+		InstructionVariant{0xA7, ZeroPage, 3},
+		InstructionVariant{0xAF, Absolute, 4},
+		InstructionVariant{0xB3, IndirectY, 5},
+		InstructionVariant{0xB7, ZeroPageY, 4},
+		InstructionVariant{0xBF, AbsoluteY, 4},
+	)
+
+	// [Unofficial] SAX - Store Accumulator and X Register
+	c.instructions.registerVariants("SAX", c.opSAX,
+		InstructionVariant{0x83, IndirectX, 6},
+		InstructionVariant{0x87, ZeroPage, 3},
+		InstructionVariant{0x8F, Absolute, 4},
+		InstructionVariant{0x97, ZeroPageY, 4},
+	)
+
+	// [Unofficial] DCP - Decrement Memory and Compare
+	c.instructions.registerVariants("DCP", c.opDCP,
+		InstructionVariant{0xC3, IndirectX, 8},
+		InstructionVariant{0xC7, ZeroPage, 5},
+		InstructionVariant{0xCF, Absolute, 6},
+		InstructionVariant{0xD3, IndirectY, 8},
+		InstructionVariant{0xD7, ZeroPageX, 6},
+		InstructionVariant{0xDB, AbsoluteY, 7},
+		InstructionVariant{0xDF, AbsoluteX, 7},
+	)
+
+	// [Unofficial] ISC - Increment Memory and Subtract with Carry
+	c.instructions.registerVariants("ISC", c.opISC,
+		InstructionVariant{0xE3, IndirectX, 8},
+		InstructionVariant{0xE7, ZeroPage, 5},
+		InstructionVariant{0xEF, Absolute, 6},
+		InstructionVariant{0xF3, IndirectY, 8},
+		InstructionVariant{0xF7, ZeroPageX, 6},
+		InstructionVariant{0xFB, AbsoluteY, 7},
+		InstructionVariant{0xFF, AbsoluteX, 7},
+	)
+
+	// [Unofficial] SLO - Arithmetic Shift Left and Logical Inclusive OR
+	c.instructions.registerVariants("SLO", c.opSLO,
+		InstructionVariant{0x03, IndirectX, 8},
+		InstructionVariant{0x07, ZeroPage, 5},
+		InstructionVariant{0x0F, Absolute, 6},
+		InstructionVariant{0x13, IndirectY, 8},
+		InstructionVariant{0x17, ZeroPageX, 6},
+		InstructionVariant{0x1B, AbsoluteY, 7},
+		InstructionVariant{0x1F, AbsoluteX, 7},
+	)
+
+	// [Unofficial] RLA - Rotate Left and Logical AND
+	c.instructions.registerVariants("RLA", c.opRLA,
+		InstructionVariant{0x23, IndirectX, 8},
+		InstructionVariant{0x27, ZeroPage, 5},
+		InstructionVariant{0x2F, Absolute, 6},
+		InstructionVariant{0x33, IndirectY, 8},
+		InstructionVariant{0x37, ZeroPageX, 6},
+		InstructionVariant{0x3B, AbsoluteY, 7},
+		InstructionVariant{0x3F, AbsoluteX, 7},
+	)
+
+	// [Unofficial] SRE - Logical Shift Right and Exclusive OR
+	c.instructions.registerVariants("SRE", c.opSRE,
+		InstructionVariant{0x43, IndirectX, 8},
+		InstructionVariant{0x47, ZeroPage, 5},
+		InstructionVariant{0x4F, Absolute, 6},
+		InstructionVariant{0x53, IndirectY, 8},
+		InstructionVariant{0x57, ZeroPageX, 6},
+		InstructionVariant{0x5B, AbsoluteY, 7},
+		InstructionVariant{0x5F, AbsoluteX, 7},
+	)
+
+	// [Unofficial] RRA - Rotate Right and Add with Carry
+	c.instructions.registerVariants("RRA", c.opRRA,
+		InstructionVariant{0x63, IndirectX, 8},
+		InstructionVariant{0x67, ZeroPage, 5},
+		InstructionVariant{0x6F, Absolute, 6},
+		InstructionVariant{0x73, IndirectY, 8},
+		InstructionVariant{0x77, ZeroPageX, 6},
+		InstructionVariant{0x7B, AbsoluteY, 7},
+		InstructionVariant{0x7F, AbsoluteX, 7},
+	)
+
+	// [Unofficial] KIL - Halt CPU
+	c.instructions.registerVariants("KIL", c.opKIL,
+		InstructionVariant{0x02, Implicit, 0},
+		InstructionVariant{0x12, Implicit, 0},
+		InstructionVariant{0x22, Implicit, 0},
+		InstructionVariant{0x32, Implicit, 0},
+		InstructionVariant{0x42, Implicit, 0},
+		InstructionVariant{0x52, Implicit, 0},
+		InstructionVariant{0x62, Implicit, 0},
+		InstructionVariant{0x72, Implicit, 0},
+		InstructionVariant{0x92, Implicit, 0},
+		InstructionVariant{0xB2, Implicit, 0},
+		InstructionVariant{0xD2, Implicit, 0},
+		InstructionVariant{0xF2, Implicit, 0},
 	)
 }
 

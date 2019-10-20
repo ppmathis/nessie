@@ -54,6 +54,7 @@ type Registers struct {
 
 type CPU struct {
 	Debug       bool
+	Halted      bool
 	TotalCycles Cycles
 	Flags       Flags
 	Registers   Registers
@@ -65,6 +66,8 @@ type CPU struct {
 
 func NewCPU() (cpu *CPU) {
 	cpu = &CPU{
+		Debug:       false,
+		Halted:      false,
 		TotalCycles: 0,
 		Flags:       Flags{},
 		Registers: Registers{
@@ -81,6 +84,10 @@ func NewCPU() (cpu *CPU) {
 }
 
 func (c *CPU) Execute() {
+	if c.Halted {
+		panic("cpu is halted")
+	}
+
 	opcode := Opcode(c.Memory.Peek(c.Registers.PC))
 	c.Registers.PC++
 
