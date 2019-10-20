@@ -56,7 +56,7 @@ type CPU struct {
 	TotalCycles Cycles
 	Flags       Flags
 	Registers   Registers
-	Memory      Memory
+	Memory      *MappedMemory
 
 	addressingHandlers AddressingHandlerTable
 	instructions       InstructionTable
@@ -70,7 +70,7 @@ func NewCPU() (cpu *CPU) {
 			PC: 0xFFFC,
 			S:  0xFD,
 		},
-		Memory: NewBasicMemory(),
+		Memory: NewMappedMemory(NewBasicMemory()),
 	}
 
 	cpu.registerAddressingHandlers()
