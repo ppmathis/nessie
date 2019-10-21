@@ -28,14 +28,14 @@ const (
 )
 
 const (
-	FlagOriginPHP FlagOrigin = iota
+	FlagOriginNone FlagOrigin = iota
+	FlagOriginPHP
 	FlagOriginBRK
 	FlagOriginIRQ
 	FlagOriginNMI
 )
 
 type Flags struct {
-	Origin           FlagOrigin
 	Carry            bool
 	Zero             bool
 	InterruptDisable bool
@@ -70,7 +70,9 @@ func NewCPU() (cpu *CPU) {
 		Debug:       false,
 		Halted:      false,
 		TotalCycles: 0,
-		Flags:       Flags{},
+		Flags: Flags{
+			InterruptDisable: true,
+		},
 		Registers: Registers{
 			PC: 0xFFFC,
 			S:  0xFD,
@@ -185,10 +187,10 @@ func (c *CPU) generateDisassembly(instruction Instruction) {
 		assembly = fmt.Sprintf("%s $%04X", instruction.Mnemonic, value)
 	}
 
-	c.lastDisassembly = fmt.Sprintf("[0x%04X] %-8s - %-9s - A:%02X X:%02X Y:%02X S:%02X CYC:%d",
+	c.lastDisassembly = fmt.Sprintf("[0x%04X] %-8s - %-40s - A:%02X X:%02X Y:%02X S:%02X P:%02X CYC:%d",
 		c.Registers.PC-1, bytes, assembly,
 		c.Registers.A, c.Registers.X, c.Registers.Y, c.Registers.S,
-		c.TotalCycles,
+		c.FlagsBinary(FlagOriginNone), c.TotalCycles,
 	)
 }
 
@@ -245,4 +247,34 @@ func (c *CPU) GetFlagName(flag Flag) string {
 	default:
 		panic(fmt.Errorf("unknown flag: %d", flag))
 	}
+}
+
+func (c *CPU) FlagsBinary(origin FlagOrigin) (value uint8) {
+	if c.Flags.Carry {
+		value |= 0x1 << 0
+	}
+	if c.Flags.Zero {
+		value |= 0x1 << 1
+	}
+	if c.Flags.InterruptDisable {
+		value |= 0x1 << 2
+	}
+	if c.Flags.Decimal {
+		value |= 0x1 << 3
+	}
+	if c.Flags.Overflow {
+		value |= 0x1 << 6
+	}
+	if c.Flags.Negative {
+		value |= 0x1 << 7
+	}
+
+	switch origin {
+	case FlagOriginPHP, FlagOriginBRK:
+		value |= 0x3 << 4
+	case FlagOriginIRQ, FlagOriginNMI, FlagOriginNone:
+		value |= 0x2 << 4
+	}
+
+	return
 }

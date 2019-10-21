@@ -9,6 +9,23 @@ func (c *CPU) setFlagsZN(result uint8) uint8 {
 	return result
 }
 
+func (c *CPU) addition(value uint8) {
+	previousA := uint16(c.Registers.A)
+	summand := uint16(value)
+
+	sum := previousA + summand
+	if c.Flags.Carry {
+		sum++
+	}
+	result := sum & 0xFF
+
+	c.Registers.A = uint8(result)
+	c.Flags.Carry = (sum & 0x100) == 0x100
+	c.Flags.Zero = result == 0
+	c.Flags.Overflow = ((previousA ^ result) & (summand ^ result) & 0x80) == 0x80
+	c.Flags.Negative = (sum & 0x80) == 0x80
+}
+
 func (c *CPU) branch(condition bool, target uint16) (extraCycles Cycles) {
 	if !condition {
 		return
@@ -306,39 +323,7 @@ func (c *CPU) opPLA(mode AddressingMode) (extraCycles Cycles) {
 }
 
 func (c *CPU) opPHP(mode AddressingMode) (extraCycles Cycles) {
-	var value uint8
-
-	if c.Flags.Carry {
-		value |= 0x1 << 0
-	}
-	if c.Flags.Zero {
-		value |= 0x1 << 1
-	}
-	if c.Flags.InterruptDisable {
-		value |= 0x1 << 2
-	}
-	if c.Flags.Decimal {
-		value |= 0x1 << 3
-	}
-	if c.Flags.Overflow {
-		value |= 0x1 << 6
-	}
-	if c.Flags.Negative {
-		value |= 0x1 << 7
-	}
-
-	switch c.Flags.Origin {
-	case FlagOriginPHP:
-		value |= 0x3 << 4
-	case FlagOriginBRK:
-		value |= 0x3 << 4
-		c.Flags.InterruptDisable = true
-	case FlagOriginIRQ, FlagOriginNMI:
-		value |= 0x2 << 4
-		c.Flags.InterruptDisable = true
-	}
-
-	c.Push(value)
+	c.Push(c.FlagsBinary(FlagOriginPHP))
 	return
 }
 
@@ -370,9 +355,9 @@ func (c *CPU) opRTI(mode AddressingMode) (extraCycles Cycles) {
 
 func (c *CPU) opBRK(mode AddressingMode) (extraCycles Cycles) {
 	c.Push16(c.Registers.PC)
-	c.opPHP(Implicit)
+	c.Flags.InterruptDisable = true
 	c.Registers.PC = c.Memory.Peek16(ResetVector)
-	c.Flags.Origin = FlagOriginBRK
+	c.Push(c.FlagsBinary(FlagOriginBRK))
 	return
 }
 
@@ -414,6 +399,7 @@ func (c *CPU) opROL(mode AddressingMode) (extraCycles Cycles) {
 
 	c.Flags.Carry = previousCarry
 	c.Flags.Zero = c.Registers.A == 0
+	c.Flags.Negative = (value & 0x80) == 0x80
 
 	return
 }
@@ -445,6 +431,7 @@ func (c *CPU) opROR(mode AddressingMode) (extraCycles Cycles) {
 
 	c.Flags.Carry = previousCarry
 	c.Flags.Zero = c.Registers.A == 0
+	c.Flags.Negative = (value & 0x80) == 0x80
 
 	return
 }
@@ -460,18 +447,14 @@ func (c *CPU) opASL(mode AddressingMode) (extraCycles Cycles) {
 		value = c.Memory.Peek(address)
 	}
 
-	previousCarry := (value>>7)&0x1 == 0x1
-	value <<= 1
+	c.Flags.Carry = (value>>7)&0x1 == 0x1
+	value = c.setFlagsZN(value << 1)
 
 	if mode == Accumulator {
 		c.Registers.A = value
 	} else {
 		c.Memory.Poke(address, value)
 	}
-
-	c.Flags.Carry = previousCarry
-	c.Flags.Zero = c.Registers.A == 0
-	c.Flags.Negative = (value>>7)&0x1 == 0x1
 
 	return
 }
@@ -487,8 +470,8 @@ func (c *CPU) opLSR(mode AddressingMode) (extraCycles Cycles) {
 		value = c.Memory.Peek(address)
 	}
 
-	previousCarry := (value>>0)&0x1 == 0x1
-	value >>= 1
+	c.Flags.Carry = (value & 0x1) == 0x1
+	value = c.setFlagsZN(value >> 1)
 
 	if mode == Accumulator {
 		c.Registers.A = value
@@ -496,103 +479,79 @@ func (c *CPU) opLSR(mode AddressingMode) (extraCycles Cycles) {
 		c.Memory.Poke(address, value)
 	}
 
-	c.Flags.Carry = previousCarry
-	c.Flags.Zero = c.Registers.A == 0
-	c.Flags.Negative = (value>>7)&0x1 == 0x1
-
 	return
 }
 
 func (c *CPU) opADC(mode AddressingMode) (extraCycles Cycles) {
 	address, extraCycles := c.lookupAddress(mode)
-	value1 := uint16(c.Registers.A)
-	value2 := uint16(c.Memory.Peek(address))
-
-	result := value1 + value2
-	if c.Flags.Carry {
-		result++
-	}
-
-	signValue1 := (value1>>7)&0x1 == 0x1
-	signValue2 := (value2>>7)&0x1 == 0x1
-	signResult := (result>>7)&0x1 == 0x1
-
-	c.Registers.A = uint8(result & 0xFF)
-	c.Flags.Carry = (result>>8)&0x1 == 0x1
-	c.Flags.Zero = c.Registers.A == 0
-	c.Flags.Overflow = signValue1 == signValue2 && signValue1 != signResult
-	c.Flags.Negative = signResult
-
+	c.addition(c.Memory.Peek(address))
 	return
 }
 
 func (c *CPU) opSBC(mode AddressingMode) (extraCycles Cycles) {
 	address, extraCycles := c.lookupAddress(mode)
-	value1 := uint16(c.Registers.A)
-	value2 := uint16(c.Memory.Peek(address))
-
-	result := value1 - value2
-	if !c.Flags.Carry {
-		result--
-	}
-
-	signValue1 := (value1>>7)&0x1 == 0x1
-	signValue2 := (value2>>7)&0x1 == 0x1
-	signResult := (result>>7)&0x1 == 0x1
-
-	c.Registers.A = uint8(result & 0xFF)
-	c.Flags.Carry = (result>>8)&0x1 == 0x1
-	c.Flags.Zero = c.Registers.A == 0
-	c.Flags.Overflow = signValue1 == signValue2 && signValue1 != signResult
-	c.Flags.Negative = signResult
-
+	c.addition(^c.Memory.Peek(address))
 	return
 }
 
 func (c *CPU) opLAX(mode AddressingMode) (extraCycles Cycles) {
+	previousPC := c.Registers.PC
 	extraCycles = c.opLDA(mode) // Re-use extra cycles from LDA opcode, as LAX behaves the same
+	c.Registers.PC = previousPC
 	_ = c.opLDX(mode)
 	return
 }
 
 func (c *CPU) opSAX(mode AddressingMode) (extraCycles Cycles) {
-	_ = c.opSTA(mode)
-	_ = c.opSTX(mode)
+	address, _ := c.lookupAddress(mode)
+	c.Memory.Poke(address, c.Registers.A & c.Registers.X)
 	return
 }
 
 func (c *CPU) opDCP(mode AddressingMode) (extraCycles Cycles) {
+	previousPC := c.Registers.PC
 	_ = c.opDEC(mode)
+	c.Registers.PC = previousPC
 	_ = c.opCMP(mode)
 	return
 }
 
 func (c *CPU) opISC(mode AddressingMode) (extraCycles Cycles) {
+	previousPC := c.Registers.PC
 	_ = c.opINC(mode)
+	c.Registers.PC = previousPC
 	_ = c.opSBC(mode)
 	return
 }
 
 func (c *CPU) opSLO(mode AddressingMode) (extraCycles Cycles) {
+	previousPC := c.Registers.PC
 	_ = c.opASL(mode)
+	c.Registers.PC = previousPC
 	_ = c.opORA(mode)
 	return
 }
 
 func (c *CPU) opRLA(mode AddressingMode) (extraCycles Cycles) {
+	previousPC := c.Registers.PC
 	_ = c.opROL(mode)
+	c.Registers.PC = previousPC
 	_ = c.opAND(mode)
 	return
 }
 
 func (c *CPU) opSRE(mode AddressingMode) (extraCycles Cycles) {
+	previousPC := c.Registers.PC
 	_ = c.opLSR(mode)
+	c.Registers.PC = previousPC
 	_ = c.opEOR(mode)
 	return
 }
 
 func (c *CPU) opRRA(mode AddressingMode) (extraCycles Cycles) {
+	previousPC := c.Registers.PC
 	_ = c.opROR(mode)
+	c.Registers.PC = previousPC
 	_ = c.opADC(mode)
 	return
 }

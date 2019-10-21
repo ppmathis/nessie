@@ -100,15 +100,25 @@ func (c *CPU) amAbsoluteY() (address uint16, extraCycles Cycles) {
 }
 
 func (c *CPU) amIndirect() (address uint16, extraCycles Cycles) {
-	address = c.Memory.Peek16(c.Memory.Peek16(c.Registers.PC))
+	addressPtr := c.Memory.Peek16(c.Registers.PC)
 	c.Registers.PC += 2
+
+	wrappedPtr := (addressPtr & 0xFF00) | ((addressPtr + 1) & 0x00FF)
+	addressLow := uint16(c.Memory.Peek(addressPtr))
+	addressHigh := uint16(c.Memory.Peek(wrappedPtr))
+	address = addressLow | addressHigh << 8
+
 	return
 }
 
 func (c *CPU) amIndirectX() (address uint16, extraCycles Cycles) {
-	addressPtr := uint16(c.Memory.Peek(c.Registers.PC)+c.Registers.X) & 0xFF
-	address = c.Memory.Peek16(addressPtr)
+	addressPtr := uint16(c.Memory.Peek(c.Registers.PC) + c.Registers.X)
 	c.Registers.PC++
+
+	addressLow := uint16(c.Memory.Peek(addressPtr))
+	addressHigh := uint16(c.Memory.Peek((addressPtr + 1) & 0xFF))
+	address = addressLow | (addressHigh << 8)
+
 	return
 }
 
@@ -116,7 +126,10 @@ func (c *CPU) amIndirectY() (address uint16, extraCycles Cycles) {
 	addressPtr := uint16(c.Memory.Peek(c.Registers.PC))
 	c.Registers.PC++
 
-	address = c.Memory.Peek16(addressPtr) + uint16(c.Registers.Y)
+	addressLow := uint16(c.Memory.Peek(addressPtr))
+	addressHigh := uint16(c.Memory.Peek((addressPtr + 1) & 0xFF))
+	address = (addressLow | (addressHigh << 8)) + uint16(c.Registers.Y)
+
 	if !SamePage(addressPtr, address) {
 		extraCycles = 1
 	}
