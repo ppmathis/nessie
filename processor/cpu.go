@@ -60,6 +60,7 @@ type CPU struct {
 	Registers   Registers
 	Memory      *MappedMemory
 
+	lastDisassembly    string
 	addressingHandlers AddressingHandlerTable
 	instructions       InstructionTable
 }
@@ -95,33 +96,8 @@ func (c *CPU) Execute() {
 	if !ok {
 		panic(fmt.Errorf("invalid opcode: 0x%02X", opcode))
 	}
-
 	if c.Debug {
-		var assembly string
-
-		switch instruction.Variant.AddressingMode {
-		case Implicit, Accumulator:
-			assembly = fmt.Sprintf("%02X      ",
-				c.Memory.Peek(c.Registers.PC-1),
-			)
-		case Immediate, ZeroPage, ZeroPageX, ZeroPageY, IndirectX, IndirectY, Relative:
-			assembly = fmt.Sprintf("%02X %02X   ",
-				c.Memory.Peek(c.Registers.PC-1),
-				c.Memory.Peek(c.Registers.PC),
-			)
-		case Absolute, AbsoluteX, AbsoluteY, Indirect:
-			assembly = fmt.Sprintf("%02X %02X %02X",
-				c.Memory.Peek(c.Registers.PC-1),
-				c.Memory.Peek(c.Registers.PC),
-				c.Memory.Peek(c.Registers.PC+1),
-			)
-		}
-
-		fmt.Printf("[0x%04X] %s - %s - A:%02X X:%02X Y:%02X S:%02X CYC:%d\n",
-			c.Registers.PC-1, assembly, instruction.Mnemonic,
-			c.Registers.A, c.Registers.X, c.Registers.Y, c.Registers.S,
-			c.TotalCycles,
-		)
+		c.generateDisassembly(instruction)
 	}
 
 	cycles := instruction.Variant.StaticCycles
@@ -153,6 +129,10 @@ func (c *CPU) Pop16() (value uint16) {
 	return
 }
 
+func (c *CPU) Disassembly() string {
+	return c.lastDisassembly
+}
+
 func (c *CPU) GetRegister(register Register) uint16 {
 	switch register {
 	case RegisterPC:
@@ -168,6 +148,48 @@ func (c *CPU) GetRegister(register Register) uint16 {
 	default:
 		panic(fmt.Errorf("unknown cpu register: %d", register))
 	}
+}
+
+func (c *CPU) generateDisassembly(instruction Instruction) {
+	var assembly string
+	var bytes string
+
+	switch instruction.Variant.AddressingMode {
+	case Implicit, Accumulator:
+		bytes = fmt.Sprintf("%02X",
+			c.Memory.Peek(c.Registers.PC-1),
+		)
+
+		assembly = instruction.Mnemonic
+	case Immediate, ZeroPage, ZeroPageX, ZeroPageY, IndirectX, IndirectY, Relative:
+		bytes = fmt.Sprintf("%02X %02X",
+			c.Memory.Peek(c.Registers.PC-1),
+			c.Memory.Peek(c.Registers.PC),
+		)
+
+		value := c.Memory.Peek(c.Registers.PC)
+		if instruction.Variant.AddressingMode == Relative {
+			target := c.Registers.PC + uint16(value) + 1
+			assembly = fmt.Sprintf("%s $%02X", instruction.Mnemonic, target)
+		} else {
+			assembly = fmt.Sprintf("%s $%02X", instruction.Mnemonic, value)
+		}
+	case Absolute, AbsoluteX, AbsoluteY, Indirect:
+		bytes = fmt.Sprintf("%02X %02X %02X",
+			c.Memory.Peek(c.Registers.PC-1),
+			c.Memory.Peek(c.Registers.PC),
+			c.Memory.Peek(c.Registers.PC+1),
+		)
+
+		value := c.Memory.Peek16(c.Registers.PC)
+		assembly = fmt.Sprintf("%s $%04X", instruction.Mnemonic, value)
+	}
+
+	c.lastDisassembly = fmt.Sprintf("[0x%04X] %-8s - %-9s - A:%02X X:%02X Y:%02X S:%02X CYC:%d",
+		c.Registers.PC-1, bytes, assembly,
+		c.Registers.A, c.Registers.X, c.Registers.Y, c.Registers.S,
+		c.TotalCycles,
+	)
 }
 
 func (c *CPU) GetRegisterName(register Register) string {
