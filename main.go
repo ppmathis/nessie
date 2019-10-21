@@ -44,24 +44,30 @@ func main() {
 		testLine := scanner.Text()
 		testData := mapRegexpSubs(testRegex.FindStringSubmatch(testLine), testRegex.SubexpNames())
 
-		fmt.Printf("NESTest: [0x%s] %-8s - %-9s - A:%s X:%s Y:%s S:%s CYC:%s\n",
+		fmt.Printf("NESTest: [0x%s] %-8s - %-40s - A:%s X:%s Y:%s S:%s P:%s CYC:%s\n",
 			testData["PC"], testData["bytes"], testData["instr"],
-			testData["A"], testData["X"], testData["Y"], testData["S"], testData["cyc"],
+			testData["A"], testData["X"], testData["Y"], testData["S"], testData["P"], testData["cyc"],
 		)
-		if exp, act := fmt.Sprintf("%04X", cpu.Registers.PC), testData["PC"]; exp != act {
+		if act, exp := fmt.Sprintf("%04X", cpu.Registers.PC), testData["PC"]; exp != act {
 			fmt.Printf("NESTest: program counter mismatch, expected 0x%s != 0x%s actual\n", exp, act)
 			panic(fmt.Errorf("test mismatch"))
 		}
-		if exp, act := fmt.Sprintf("%02X", cpu.Registers.A), testData["A"]; exp != act {
+		if act, exp := fmt.Sprintf("%02X", cpu.Registers.A), testData["A"]; exp != act {
 			fmt.Printf("NESTest: register A mismatch, expected 0x%s != 0x%s actual\n", exp, act)
 			panic(fmt.Errorf("test mismatch"))
 		}
-		if exp, act := fmt.Sprintf("%02X", cpu.Registers.X), testData["X"]; exp != act {
+		if act, exp := fmt.Sprintf("%02X", cpu.Registers.X), testData["X"]; exp != act {
 			fmt.Printf("NESTest: register X mismatch, expected 0x%s != 0x%s actual\n", exp, act)
 			panic(fmt.Errorf("test mismatch"))
 		}
-		if exp, act := fmt.Sprintf("%02X", cpu.Registers.Y), testData["Y"]; exp != act {
+		if act, exp := fmt.Sprintf("%02X", cpu.Registers.Y), testData["Y"]; exp != act {
 			fmt.Printf("NESTest: register Y mismatch, expected 0x%s != 0x%s actual\n", exp, act)
+			panic(fmt.Errorf("test mismatch"))
+		}
+
+		flags := cpu.FlagsBinary(processor.FlagOriginNone)
+		if act, exp := fmt.Sprintf("%02X", flags), testData["P"]; exp != act {
+			fmt.Printf("NESTest: cpu flags mismatch, expected 0x%s != 0x%s actual\n", exp, act)
 			panic(fmt.Errorf("test mismatch"))
 		}
 
