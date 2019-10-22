@@ -40,6 +40,7 @@ func main() {
 
 	cpu.Debug = true
 	cpu.Registers.PC = 0xC000
+	cpu.TotalCycles = 7
 	for !cpu.Halted && scanner.Scan() {
 		testLine := scanner.Text()
 		testData := mapRegexpSubs(testRegex.FindStringSubmatch(testLine), testRegex.SubexpNames())
@@ -50,6 +51,10 @@ func main() {
 		)
 		if act, exp := fmt.Sprintf("%04X", cpu.Registers.PC), testData["PC"]; exp != act {
 			fmt.Printf("NESTest: program counter mismatch, expected 0x%s != 0x%s actual\n", exp, act)
+			panic(fmt.Errorf("test mismatch"))
+		}
+		if act, exp := fmt.Sprintf("%d", cpu.TotalCycles), testData["cyc"]; exp != act {
+			fmt.Printf("NESTest: cycle count mismatch, expected %s != %s actual\n", exp, act)
 			panic(fmt.Errorf("test mismatch"))
 		}
 		if act, exp := fmt.Sprintf("%02X", cpu.Registers.A), testData["A"]; exp != act {
@@ -83,7 +88,7 @@ func main() {
 func mapRegexpSubs(matches, names []string) map[string]string {
 	matches, names = matches[1:], names[1:]
 	r := make(map[string]string, len(matches))
-	for i, _ := range names {
+	for i := range names {
 		r[names[i]] = matches[i]
 	}
 	return r

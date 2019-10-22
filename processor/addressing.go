@@ -106,7 +106,7 @@ func (c *CPU) amIndirect() (address uint16, extraCycles Cycles) {
 	wrappedPtr := (addressPtr & 0xFF00) | ((addressPtr + 1) & 0x00FF)
 	addressLow := uint16(c.Memory.Peek(addressPtr))
 	addressHigh := uint16(c.Memory.Peek(wrappedPtr))
-	address = addressLow | addressHigh << 8
+	address = addressLow | addressHigh<<8
 
 	return
 }
@@ -126,11 +126,12 @@ func (c *CPU) amIndirectY() (address uint16, extraCycles Cycles) {
 	addressPtr := uint16(c.Memory.Peek(c.Registers.PC))
 	c.Registers.PC++
 
-	addressLow := uint16(c.Memory.Peek(addressPtr))
-	addressHigh := uint16(c.Memory.Peek((addressPtr + 1) & 0xFF))
-	address = (addressLow | (addressHigh << 8)) + uint16(c.Registers.Y)
+	baseLow := uint16(c.Memory.Peek(addressPtr))
+	baseHigh := uint16(c.Memory.Peek((addressPtr + 1) & 0xFF))
+	baseAddress := baseLow | (baseHigh << 8)
+	address = baseAddress + uint16(c.Registers.Y)
 
-	if !SamePage(addressPtr, address) {
+	if !SamePage(baseAddress, address) {
 		extraCycles = 1
 	}
 

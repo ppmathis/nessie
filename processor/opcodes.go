@@ -504,7 +504,7 @@ func (c *CPU) opLAX(mode AddressingMode) (extraCycles Cycles) {
 
 func (c *CPU) opSAX(mode AddressingMode) (extraCycles Cycles) {
 	address, _ := c.lookupAddress(mode)
-	c.Memory.Poke(address, c.Registers.A & c.Registers.X)
+	c.Memory.Poke(address, c.Registers.A&c.Registers.X)
 	return
 }
 
