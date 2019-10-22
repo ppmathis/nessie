@@ -14,8 +14,8 @@ func setup() {
 }
 
 type testFlags struct {
-	enabled  []Flag
-	disabled []Flag
+	enabled  []Status
+	disabled []Status
 }
 
 type testRegister struct {
@@ -23,7 +23,7 @@ type testRegister struct {
 	expected uint16
 }
 
-func (f *testFlags) Add(flag Flag, isEnabled bool) {
+func (f *testFlags) Add(flag Status, isEnabled bool) {
 	if isEnabled {
 		f.enabled = append(f.enabled, flag)
 	} else {
@@ -39,7 +39,7 @@ func assertCycles(t *testing.T, expected Cycles) {
 	}
 }
 
-func assertFlags(t *testing.T, enabledFlags []Flag, disabledFlags []Flag) {
+func assertFlags(t *testing.T, enabledFlags []Status, disabledFlags []Status) {
 	for _, flag := range enabledFlags {
 		if !cpu.GetFlag(flag) {
 			t.Errorf("expected flag [%s] to be set", cpu.GetFlagName(flag))
@@ -150,7 +150,7 @@ func TestAND(t *testing.T) {
 		testImmediate(0x29, b, Registers{A: a})
 
 		flags := testFlags{}
-		flags.Add(FlagZero, isZero)
+		flags.Add(FlagZ, isZero)
 		flags.Add(FlagNegative, isNegative)
 
 		assertCPU(t, 2, flags, testRegister{register: RegisterA, expected: uint16(result)})
@@ -167,7 +167,7 @@ func TestORA(t *testing.T) {
 		testImmediate(0x09, b, Registers{A: a})
 
 		flags := testFlags{}
-		flags.Add(FlagZero, isZero)
+		flags.Add(FlagZ, isZero)
 		flags.Add(FlagNegative, isNegative)
 
 		assertCPU(t, 2, flags, testRegister{register: RegisterA, expected: uint16(result)})
@@ -184,7 +184,7 @@ func TestEOR(t *testing.T) {
 		testImmediate(0x49, b, Registers{A: a})
 
 		flags := testFlags{}
-		flags.Add(FlagZero, isZero)
+		flags.Add(FlagZ, isZero)
 		flags.Add(FlagNegative, isNegative)
 
 		assertCPU(t, 2, flags, testRegister{register: RegisterA, expected: uint16(result)})
@@ -201,7 +201,7 @@ func TestINC(t *testing.T) {
 		testAbsolute(0xEE, value, Registers{})
 
 		flags := testFlags{}
-		flags.Add(FlagZero, isZero)
+		flags.Add(FlagZ, isZero)
 		flags.Add(FlagNegative, isNegative)
 
 		assertCPU(t, 6, flags)
@@ -219,7 +219,7 @@ func TestINX(t *testing.T) {
 		testImplicit(0xE8, Registers{X: value})
 
 		flags := testFlags{}
-		flags.Add(FlagZero, isZero)
+		flags.Add(FlagZ, isZero)
 		flags.Add(FlagNegative, isNegative)
 
 		assertCPU(t, 2, flags, testRegister{register: RegisterX, expected: uint16(result)})
@@ -236,7 +236,7 @@ func TestINY(t *testing.T) {
 		testImplicit(0xC8, Registers{Y: value})
 
 		flags := testFlags{}
-		flags.Add(FlagZero, isZero)
+		flags.Add(FlagZ, isZero)
 		flags.Add(FlagNegative, isNegative)
 
 		assertCPU(t, 2, flags, testRegister{register: RegisterY, expected: uint16(result)})
@@ -253,7 +253,7 @@ func TestDEC(t *testing.T) {
 		testAbsolute(0xCE, value, Registers{})
 
 		flags := testFlags{}
-		flags.Add(FlagZero, isZero)
+		flags.Add(FlagZ, isZero)
 		flags.Add(FlagNegative, isNegative)
 
 		assertCPU(t, 6, flags)
@@ -271,7 +271,7 @@ func TestDEX(t *testing.T) {
 		testImplicit(0xCA, Registers{X: value})
 
 		flags := testFlags{}
-		flags.Add(FlagZero, isZero)
+		flags.Add(FlagZ, isZero)
 		flags.Add(FlagNegative, isNegative)
 
 		assertCPU(t, 2, flags, testRegister{register: RegisterX, expected: uint16(result)})
@@ -288,7 +288,7 @@ func TestDEY(t *testing.T) {
 		testImplicit(0x88, Registers{Y: value})
 
 		flags := testFlags{}
-		flags.Add(FlagZero, isZero)
+		flags.Add(FlagZ, isZero)
 		flags.Add(FlagNegative, isNegative)
 
 		assertCPU(t, 2, flags, testRegister{register: RegisterY, expected: uint16(result)})
@@ -305,8 +305,8 @@ func TestCMP(t *testing.T) {
 		testImmediate(0xC9, b, Registers{A: a})
 
 		flags := testFlags{}
-		flags.Add(FlagCarry, isCarry)
-		flags.Add(FlagZero, isZero)
+		flags.Add(FlagC, isCarry)
+		flags.Add(FlagZ, isZero)
 		flags.Add(FlagNegative, isNegative)
 
 		assertCPU(t, 2, flags, testRegister{register: RegisterA, expected: uint16(a)})
@@ -324,8 +324,8 @@ func TestCPX(t *testing.T) {
 		testImmediate(0xE0, b, Registers{X: a})
 
 		flags := testFlags{}
-		flags.Add(FlagCarry, isCarry)
-		flags.Add(FlagZero, isZero)
+		flags.Add(FlagC, isCarry)
+		flags.Add(FlagZ, isZero)
 		flags.Add(FlagNegative, isNegative)
 
 		assertCPU(t, 2, flags, testRegister{register: RegisterX, expected: uint16(a)})
@@ -343,8 +343,8 @@ func TestCPY(t *testing.T) {
 		testImmediate(0xC0, b, Registers{Y: a})
 
 		flags := testFlags{}
-		flags.Add(FlagCarry, isCarry)
-		flags.Add(FlagZero, isZero)
+		flags.Add(FlagC, isCarry)
+		flags.Add(FlagZ, isZero)
 		flags.Add(FlagNegative, isNegative)
 
 		assertCPU(t, 2, flags, testRegister{register: RegisterY, expected: uint16(a)})
@@ -362,7 +362,7 @@ func TestTAX(t *testing.T) {
 		testImplicit(0xAA, Registers{A: value})
 
 		flags := testFlags{}
-		flags.Add(FlagZero, isZero)
+		flags.Add(FlagZ, isZero)
 		flags.Add(FlagNegative, isNegative)
 
 		assertCPU(t, 2, flags, testRegister{register: RegisterX, expected: uint16(value)})
@@ -379,7 +379,7 @@ func TestTXA(t *testing.T) {
 		testImplicit(0x8A, Registers{X: value})
 
 		flags := testFlags{}
-		flags.Add(FlagZero, isZero)
+		flags.Add(FlagZ, isZero)
 		flags.Add(FlagNegative, isNegative)
 
 		assertCPU(t, 2, flags, testRegister{register: RegisterA, expected: uint16(value)})
@@ -396,7 +396,7 @@ func TestTAY(t *testing.T) {
 		testImplicit(0xA8, Registers{A: value})
 
 		flags := testFlags{}
-		flags.Add(FlagZero, isZero)
+		flags.Add(FlagZ, isZero)
 		flags.Add(FlagNegative, isNegative)
 
 		assertCPU(t, 2, flags, testRegister{register: RegisterY, expected: uint16(value)})
@@ -413,7 +413,7 @@ func TestTXY(t *testing.T) {
 		testImplicit(0x98, Registers{Y: value})
 
 		flags := testFlags{}
-		flags.Add(FlagZero, isZero)
+		flags.Add(FlagZ, isZero)
 		flags.Add(FlagNegative, isNegative)
 
 		assertCPU(t, 2, flags, testRegister{register: RegisterA, expected: uint16(value)})
@@ -609,7 +609,7 @@ func TestSTY(t *testing.T) {
 
 func TestCLC(t *testing.T) {
 	flags := testFlags{}
-	flags.Add(FlagCarry, false)
+	flags.Add(FlagC, false)
 
 	testImplicitFlags(0x18, Flags{Carry: true})
 	assertCPU(t, 2, flags)
@@ -617,7 +617,7 @@ func TestCLC(t *testing.T) {
 
 func TestSEC(t *testing.T) {
 	flags := testFlags{}
-	flags.Add(FlagCarry, true)
+	flags.Add(FlagC, true)
 
 	testImplicitFlags(0x38, Flags{Carry: false})
 	assertCPU(t, 2, flags)
@@ -752,7 +752,7 @@ func TestPLA(t *testing.T) {
 		cpu.Execute()
 
 		flags := testFlags{}
-		flags.Add(FlagZero, isZero)
+		flags.Add(FlagZ, isZero)
 		flags.Add(FlagNegative, isNegative)
 
 		assertCPU(t, 4, flags, testRegister{register: RegisterA, expected: uint16(value)})
@@ -793,8 +793,8 @@ func TestPLP(t *testing.T) {
 	cpu.Memory.Poke(0x01FD, 0xFF)
 	cpu.Execute()
 
-	flags := testFlags{enabled: []Flag{
-		FlagCarry, FlagZero, FlagInterruptDisable, FlagDecimal, FlagOverflow, FlagNegative,
+	flags := testFlags{enabled: []Status{
+		FlagC, FlagZ, FlagInterruptDisable, FlagDecimal, FlagOverflow, FlagNegative,
 	}}
 
 	assertCPU(t, 4, flags)
@@ -817,8 +817,8 @@ func TestRTI(t *testing.T) {
 	cpu.Memory.Poke(0x01FB, 0xFF)
 	cpu.Execute()
 
-	flags := testFlags{enabled: []Flag{
-		FlagCarry, FlagZero, FlagInterruptDisable, FlagDecimal, FlagOverflow, FlagNegative,
+	flags := testFlags{enabled: []Status{
+		FlagC, FlagZ, FlagInterruptDisable, FlagDecimal, FlagOverflow, FlagNegative,
 	}}
 
 	assertCPU(t, 6, flags, testRegister{register: RegisterPC, expected: 0x1234})
@@ -835,8 +835,8 @@ func TestBRK(t *testing.T) {
 	cpu.Memory.Poke16(ResetVector, 0x1234)
 	cpu.Execute()
 
-	flags := testFlags{disabled: []Flag{
-		FlagCarry, FlagZero, FlagInterruptDisable, FlagDecimal, FlagOverflow, FlagNegative,
+	flags := testFlags{disabled: []Status{
+		FlagC, FlagZ, FlagInterruptDisable, FlagDecimal, FlagOverflow, FlagNegative,
 	}}
 
 	assertCPU(t, 7, flags, testRegister{register: RegisterPC, expected: 0x1234})
@@ -848,7 +848,7 @@ func TestBIT(t *testing.T) {
 		testAbsolute(0x2C, b, Registers{A: a})
 
 		flags := testFlags{}
-		flags.Add(FlagZero, isZero)
+		flags.Add(FlagZ, isZero)
 		flags.Add(FlagOverflow, isOverflow)
 		flags.Add(FlagNegative, isNegative)
 
@@ -867,16 +867,16 @@ func TestROL(t *testing.T) {
 		fmt.Printf("testROL[0x%02X] =? 0x%02X (C:%t Z:%t N:%t)\n", before, after, isCarry, isZero, isNegative)
 
 		implicitFlags := testFlags{}
-		implicitFlags.Add(FlagCarry, isCarry)
-		implicitFlags.Add(FlagZero, isZero)
+		implicitFlags.Add(FlagC, isCarry)
+		implicitFlags.Add(FlagZ, isZero)
 		implicitFlags.Add(FlagNegative, isNegative)
 
 		testImplicit(0x2A, Registers{A: before})
 		assertCPU(t, 2, implicitFlags, testRegister{register: RegisterA, expected: uint16(after)})
 
 		absoluteFlags := testFlags{}
-		absoluteFlags.Add(FlagCarry, isCarry)
-		absoluteFlags.Add(FlagZero, true)
+		absoluteFlags.Add(FlagC, isCarry)
+		absoluteFlags.Add(FlagZ, true)
 		absoluteFlags.Add(FlagNegative, isNegative)
 
 		testAbsolute(0x2E, before, Registers{A: 0x00})
@@ -893,16 +893,16 @@ func TestROR(t *testing.T) {
 		fmt.Printf("testROR[0x%02X] =? 0x%02X (C:%t Z:%t N:%t)\n", before, after, isCarry, isZero, isNegative)
 
 		implicitFlags := testFlags{}
-		implicitFlags.Add(FlagCarry, isCarry)
-		implicitFlags.Add(FlagZero, isZero)
+		implicitFlags.Add(FlagC, isCarry)
+		implicitFlags.Add(FlagZ, isZero)
 		implicitFlags.Add(FlagNegative, isNegative)
 
 		testImplicit(0x6A, Registers{A: before})
 		assertCPU(t, 2, implicitFlags, testRegister{register: RegisterA, expected: uint16(after)})
 
 		absoluteFlags := testFlags{}
-		absoluteFlags.Add(FlagCarry, isCarry)
-		absoluteFlags.Add(FlagZero, true)
+		absoluteFlags.Add(FlagC, isCarry)
+		absoluteFlags.Add(FlagZ, true)
 		absoluteFlags.Add(FlagNegative, isNegative)
 
 		testAbsolute(0x6E, before, Registers{A: 0x00})
@@ -919,16 +919,16 @@ func TestASL(t *testing.T) {
 		fmt.Printf("testASL[0x%02X] =? 0x%02X (C:%t Z:%t N:%t)\n", before, after, isCarry, isZero, isNegative)
 
 		implicitFlags := testFlags{}
-		implicitFlags.Add(FlagCarry, isCarry)
-		implicitFlags.Add(FlagZero, isZero)
+		implicitFlags.Add(FlagC, isCarry)
+		implicitFlags.Add(FlagZ, isZero)
 		implicitFlags.Add(FlagNegative, isNegative)
 
 		testImplicit(0x0A, Registers{A: before})
 		assertCPU(t, 2, implicitFlags, testRegister{register: RegisterA, expected: uint16(after)})
 
 		absoluteFlags := testFlags{}
-		absoluteFlags.Add(FlagCarry, isCarry)
-		absoluteFlags.Add(FlagZero, true)
+		absoluteFlags.Add(FlagC, isCarry)
+		absoluteFlags.Add(FlagZ, true)
 		absoluteFlags.Add(FlagNegative, isNegative)
 
 		testAbsolute(0x0E, before, Registers{A: 0x00})
@@ -946,16 +946,16 @@ func TestLSR(t *testing.T) {
 		fmt.Printf("testLSR[0x%02X] =? 0x%02X (C:%t Z:%t N:%t)\n", before, after, isCarry, isZero, isNegative)
 
 		implicitFlags := testFlags{}
-		implicitFlags.Add(FlagCarry, isCarry)
-		implicitFlags.Add(FlagZero, isZero)
+		implicitFlags.Add(FlagC, isCarry)
+		implicitFlags.Add(FlagZ, isZero)
 		implicitFlags.Add(FlagNegative, isNegative)
 
 		testImplicit(0x4A, Registers{A: before})
 		assertCPU(t, 2, implicitFlags, testRegister{register: RegisterA, expected: uint16(after)})
 
 		absoluteFlags := testFlags{}
-		absoluteFlags.Add(FlagCarry, isCarry)
-		absoluteFlags.Add(FlagZero, true)
+		absoluteFlags.Add(FlagC, isCarry)
+		absoluteFlags.Add(FlagZ, true)
 		absoluteFlags.Add(FlagNegative, isNegative)
 
 		testAbsolute(0x4E, before, Registers{A: 0x00})
@@ -975,8 +975,8 @@ func TestADC(t *testing.T) {
 		testImmediate(0x69, b, Registers{A: a})
 
 		flags := testFlags{}
-		flags.Add(FlagCarry, isCarry)
-		flags.Add(FlagZero, isZero)
+		flags.Add(FlagC, isCarry)
+		flags.Add(FlagZ, isZero)
 		flags.Add(FlagOverflow, isOverflow)
 		flags.Add(FlagNegative, isNegative)
 
@@ -996,8 +996,8 @@ func TestSBC(t *testing.T) {
 		testImmediate(0xE9, b, Registers{A: a})
 
 		flags := testFlags{}
-		flags.Add(FlagCarry, isCarry)
-		flags.Add(FlagZero, isZero)
+		flags.Add(FlagC, isCarry)
+		flags.Add(FlagZ, isZero)
 		flags.Add(FlagOverflow, isOverflow)
 		flags.Add(FlagNegative, isNegative)
 

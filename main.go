@@ -40,7 +40,9 @@ func main() {
 
 	cpu.Debug = true
 	cpu.Registers.PC = 0xC000
+	cpu.Registers.P = 0x24
 	cpu.TotalCycles = 7
+
 	for !cpu.Halted && scanner.Scan() {
 		testLine := scanner.Text()
 		testData := mapRegexpSubs(testRegex.FindStringSubmatch(testLine), testRegex.SubexpNames())
@@ -69,9 +71,7 @@ func main() {
 			fmt.Printf("NESTest: register Y mismatch, expected 0x%s != 0x%s actual\n", exp, act)
 			panic(fmt.Errorf("test mismatch"))
 		}
-
-		flags := cpu.FlagsBinary(processor.FlagOriginNone)
-		if act, exp := fmt.Sprintf("%02X", flags), testData["P"]; exp != act {
+		if act, exp := fmt.Sprintf("%02X", cpu.Registers.P), testData["P"]; exp != act {
 			fmt.Printf("NESTest: cpu flags mismatch, expected 0x%s != 0x%s actual\n", exp, act)
 			panic(fmt.Errorf("test mismatch"))
 		}

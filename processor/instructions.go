@@ -240,12 +240,12 @@ func (c *CPU) registerInstructions() {
 		InstructionVariant{0x8C, Absolute, 4},
 	)
 
-	// CLC - Clear Carry Flag
+	// CLC - Clear Carry Status
 	c.instructions.registerVariants("CLC", c.opCLC,
 		InstructionVariant{0x18, Implicit, 2},
 	)
 
-	// SEC - Set Carry Flag
+	// SEC - Set Carry Status
 	c.instructions.registerVariants("SEC", c.opSEC,
 		InstructionVariant{0x38, Implicit, 2},
 	)
@@ -270,7 +270,7 @@ func (c *CPU) registerInstructions() {
 		InstructionVariant{0x78, Implicit, 2},
 	)
 
-	// CLV - Clear Overflow Flag
+	// CLV - Clear Overflow Status
 	c.instructions.registerVariants("CLV", c.opCLV,
 		InstructionVariant{0xB8, Implicit, 2},
 	)
