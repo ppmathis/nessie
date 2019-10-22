@@ -81,8 +81,8 @@ func main() {
 		state := cpu.PreviousState()
 		fmt.Printf("Nessie:  [0x%04X] %-8s - %-40s - A:%02X X:%02X Y:%02X S:%02X P:%02X CYC:%d\n",
 			state.Registers.PC, fmt.Sprintf("% 02X", state.InstructionBytes),
-			state.Disassembly, state.Registers.A, state.Registers.X, state.Registers.S,
-			state.Registers.S, state.Registers.PC, state.TotalCycles,
+			state.Disassembly, state.Registers.A, state.Registers.X, state.Registers.Y,
+			state.Registers.S, state.Registers.P, state.TotalCycles,
 		)
 	}
 
