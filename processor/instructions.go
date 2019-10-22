@@ -542,3 +542,58 @@ func (t *InstructionTable) registerVariants(mnemonic string, handler OpcodeHandl
 		t.registerVariant(mnemonic, handler, variant)
 	}
 }
+
+func (c *CPU) Decode(pc uint16) (instruction Instruction, bytes []byte, disassembly string) {
+	opcode, arg1, arg2 := c.Memory.Peek(pc), c.Memory.Peek(pc+1), c.Memory.Peek(pc+2)
+	arg16 := c.Memory.Peek16(pc + 1)
+
+	instruction, ok := c.instructions[Opcode(opcode)]
+	if !ok {
+		disassembly = fmt.Sprintf("invalid opcode: 0x%02X", opcode)
+		return
+	}
+
+	switch instruction.Variant.AddressingMode {
+	case Implicit:
+		bytes = []byte{opcode}
+		disassembly = instruction.Mnemonic
+	case Accumulator:
+		bytes = []byte{opcode}
+		disassembly = instruction.Mnemonic + " A"
+	case Immediate:
+		bytes = []byte{opcode, arg1}
+		disassembly = fmt.Sprintf("%s #%02X", instruction.Mnemonic, arg1)
+	case ZeroPage:
+		bytes = []byte{opcode, arg1}
+		disassembly = fmt.Sprintf("%s %02X", instruction.Mnemonic, arg1)
+	case ZeroPageX:
+		bytes = []byte{opcode, arg1}
+		disassembly = fmt.Sprintf("%s %02X,X", instruction.Mnemonic, arg1)
+	case ZeroPageY:
+		bytes = []byte{opcode, arg1}
+		disassembly = fmt.Sprintf("%s %02X,Y", instruction.Mnemonic, arg1)
+	case Absolute:
+		bytes = []byte{opcode, arg1, arg2}
+		disassembly = fmt.Sprintf("%s %04X", instruction.Mnemonic, arg16)
+	case AbsoluteX:
+		bytes = []byte{opcode, arg1, arg2}
+		disassembly = fmt.Sprintf("%s %04X,X", instruction.Mnemonic, arg16)
+	case AbsoluteY:
+		bytes = []byte{opcode, arg1, arg2}
+		disassembly = fmt.Sprintf("%s %04X,Y", instruction.Mnemonic, arg16)
+	case Relative:
+		bytes = []byte{opcode, arg1}
+		disassembly = fmt.Sprintf("%s %d", instruction.Mnemonic, c.toSigned(arg1))
+	case Indirect:
+		bytes = []byte{opcode, arg1, arg2}
+		disassembly = fmt.Sprintf("%s (%04X)", instruction.Mnemonic, arg16)
+	case IndirectX:
+		bytes = []byte{opcode, arg1}
+		disassembly = fmt.Sprintf("%s (%02X,X)", instruction.Mnemonic, arg1)
+	case IndirectY:
+		bytes = []byte{opcode, arg2}
+		disassembly = fmt.Sprintf("%s (%02X),Y", instruction.Mnemonic, arg1)
+	}
+
+	return
+}

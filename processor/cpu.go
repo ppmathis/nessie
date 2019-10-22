@@ -29,6 +29,14 @@ type Registers struct {
 	Y  uint8
 }
 
+type CPUState struct {
+	TotalCycles      Cycles
+	Registers        Registers
+	Instruction      Instruction
+	InstructionBytes []byte
+	Disassembly      string
+}
+
 type CPU struct {
 	Debug       bool
 	Halted      bool
@@ -36,7 +44,7 @@ type CPU struct {
 	Registers   Registers
 	Memory      *MappedMemory
 
-	lastDisassembly    string
+	previousState      CPUState
 	addressingHandlers AddressingHandlerTable
 	instructions       InstructionTable
 }
@@ -62,6 +70,9 @@ func NewCPU() (cpu *CPU) {
 func (c *CPU) Execute() {
 	if c.Halted {
 		panic("cpu is halted")
+	}
+	if c.Debug {
+		c.collectState()
 	}
 
 	opcode := Opcode(c.Memory.Peek(c.Registers.PC))
@@ -101,6 +112,25 @@ func (c *CPU) Pop16() (value uint16) {
 	return
 }
 
-func (c *CPU) Disassembly() string {
-	return c.lastDisassembly
+func (c *CPU) PreviousState() CPUState {
+	return c.previousState
+}
+
+func (c *CPU) collectState() {
+	instruction, bytes, disassembly := c.Decode(c.Registers.PC)
+	c.previousState = CPUState{
+		TotalCycles:      c.TotalCycles,
+		Registers:        c.Registers,
+		Instruction:      instruction,
+		InstructionBytes: bytes,
+		Disassembly:      disassembly,
+	}
+}
+
+func (c *CPU) toSigned(value uint8) int8 {
+	if value > 0x7F {
+		return int8(-(0x100 - int16(value)))
+	} else {
+		return int8(value & 0x7F)
+	}
 }

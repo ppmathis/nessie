@@ -58,14 +58,8 @@ func (c *CPU) amRelative() (address uint16, extraCycles Cycles) {
 	value := c.Memory.Peek(c.Registers.PC)
 	c.Registers.PC++
 
-	var offset int16
-	if value > 0x7F {
-		offset = -(0x100 - int16(value))
-	} else {
-		offset = int16(value & 0x7F)
-	}
-
-	address = uint16(int16(c.Registers.PC) + offset)
+	offset := c.toSigned(value)
+	address = uint16(int16(c.Registers.PC) + int16(offset))
 	return
 }
 
