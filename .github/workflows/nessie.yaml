@@ -1,0 +1,36 @@
+name: Build and test Nessie
+on: [push, pull_request]
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        go: [1.12, 1.13]
+    runs-on: ${{ matrix.os }}
+    name: Go ${{ matrix.go }}
+    steps:
+      - name: Setup Go ${{ matrix.go }}
+        uses: actions/setup-go@v1
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Checkout sources
+        uses: actions/checkout@v1
+
+      - name: Build Go
+        env:
+          GO111MODULE: on
+          GOPROXY: https://proxy.golang.org
+        run: go build .
+
+      - name: Test Go
+        env:
+          GO111MODULE: on
+          GOPROXY: https://proxy.golang.org
+        run: go test -v ./...
+
+      - name: Static Checking
+        run: |
+          export PATH=${PATH}:`go env GOPATH`/bin
+          go get -u honnef.co/go/tools/cmd/staticcheck
+          staticcheck ./...
