@@ -3,6 +3,7 @@ package cartridge
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"nessie/processor"
 )
 
@@ -47,6 +48,15 @@ func NewROM(buffer []byte) (ROM, error) {
 	default:
 		return nil, fmt.Errorf("unsupported mapper type: 0x%02X", romFile.MapperID)
 	}
+}
+
+func LoadROM(filePath string) (ROM, error) {
+	data, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("unable to open rom: %v", err)
+	}
+
+	return NewROM(data)
 }
 
 func NewROMFile(buffer []byte) (*ROMFile, error) {
