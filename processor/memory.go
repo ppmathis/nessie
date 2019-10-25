@@ -18,6 +18,7 @@ const (
 
 type Memory interface {
 	Reset()
+	Dump() []uint8
 	Peek(address uint16) (value uint8)
 	Peek16(address uint16) (value uint16)
 	Poke(address uint16, value uint8) (oldValue uint8)
@@ -48,6 +49,16 @@ func NewBasicMemory() *BasicMemory {
 func (m *BasicMemory) Reset() {
 	for i := range m.data {
 		m.data[i] = 0x00
+	}
+}
+
+func (m *BasicMemory) Dump() []uint8 {
+	if m.data == nil {
+		return nil
+	} else {
+		data := make([]uint8, len(m.data))
+		copy(data, m.data)
+		return data
 	}
 }
 

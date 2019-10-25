@@ -134,9 +134,10 @@ func TestIndirectY(t *testing.T) {
 }
 
 func TestIndirectYWrap(t *testing.T) {
-	testAddressingMode(t, IndirectY, 0x1234, 1, func(cpu *CPU) {
+	testAddressingMode(t, IndirectY, 0xAC01, 1, func(cpu *CPU) {
 		cpu.Registers.Y = 0x34
-		cpu.Memory.Poke(0x0100, 0x42)
-		cpu.Memory.Poke16(0x42, 0x1200)
+		cpu.Memory.Poke(0x0100, 0xFF)
+		cpu.Memory.Poke(0x00FF, 0xCD)
+		cpu.Memory.Poke(0x0000, 0xAB)
 	})
 }
