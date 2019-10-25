@@ -133,20 +133,12 @@ func testAbsoluteDirect(cpu *CPU, state *cpuTestState, opcode uint8, address uin
 func testRelative(cpu *CPU, state *cpuTestState, opcode uint8, offset int8) {
 	testCommon(cpu, state, opcode)
 
-	// convert
-	var value uint8
-	if value < 0 {
-		value = 0xFF - uint8(-offset)
-	} else {
-		value = uint8(offset)
-	}
-
 	// prepare
-	cpu.Memory.Poke(cpu.Registers.PC+1, value)
+	cpu.Memory.Poke(cpu.Registers.PC+1, uint8(offset))
 
 	// verify
 	state.Registers.PC++
-	state.Memory[cpu.Registers.PC+1] = value
+	state.Memory[cpu.Registers.PC+1] = uint8(offset)
 }
 
 func TestAND(t *testing.T) {
